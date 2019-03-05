@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+<meta charset="gb2312" />
+
+    <title>{% block title %}default title{% endblock %}</title>
+</head>
+
+<div id="header">
+	<h1>{% block h1 %}default head1{% endblock %}  </h1>
+</div>
+
+
+<body>
+	<div id="content">
+	{% block content %}
+	{% endblock %}
+	</div>
+</body>
+</html>

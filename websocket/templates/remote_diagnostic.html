@@ -1,0 +1,172 @@
+{% extends "base.html" %} 
+
+{% block title %}Welcome to remote diagnostic page! {% endblock %}
+
+{% block h1 %}远程诊断{% endblock %}
+{% block content %}
+{% load staticfiles %}
+
+<script src="{% static '/js/jquery-3.3.1.min.js' %}"></script>
+<script>
+let socket = null;
+let logBox = null;
+let addressBox = null;
+
+
+function addToLog(log) {
+    logBox.value += log + '\n'
+}
+
+function connect() {
+    let scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+    let defaultAddress = scheme + window.location.host + '/chat/echo';
+    let url = defaultAddress;
+    let protocols = 0;
+
+  if ('WebSocket' in window) {
+    if (protocols) {
+      socket = new WebSocket(url, protocols);
+    } else {
+      socket = new WebSocket(url);
+    }
+  } else {
+   return;
+  }
+
+  socket.onopen = function () {
+    let extraInfo = [];
+    if (('protocol' in socket) && socket.protocol) {
+      extraInfo.push('protocol = ' + socket.protocol);
+    }
+    if (('extensions' in socket) && socket.extensions) {
+      extraInfo.push('extensions = ' + socket.extensions);
+    }
+
+    let logMessage = 'Opened';
+    if (extraInfo.length > 0) {
+      logMessage += ' (' + extraInfo.join(', ') + ')';
+    }
+    addToLog(logMessage);
+  };
+  socket.onmessage = function (event) {
+    if (('ArrayBuffer' in window) && (event.data instanceof ArrayBuffer)) {
+      addToLog('< Received an ArrayBuffer of ' + event.data.byteLength +
+               ' bytes')
+    } else if (('Blob' in window) && (event.data instanceof Blob)) {
+      addToLog('< Received a Blob of ' + event.data.size + ' bytes')
+    } else {
+      addToLog('< ' + event.data);
+    }
+  };
+  socket.onerror = function () {
+    addToLog('Error');
+  };
+  socket.onclose = function (event) {
+    let logMessage = 'Closed (';
+    if ((arguments.length == 1) && ('CloseEvent' in window) &&
+        (event instanceof CloseEvent)) {
+      logMessage += 'wasClean = ' + event.wasClean;
+      // code and reason are present only for
+      // draft-ietf-hybi-thewebsocketprotocol-06 and later
+      if ('code' in event) {
+        logMessage += ', code = ' + event.code;
+      }
+      if ('reason' in event) {
+        logMessage += ', reason = ' + event.reason;
+      }
+    } else {
+      logMessage += 'CloseEvent is not available';
+    }
+    addToLog(logMessage + ')');
+  };
+
+  if (protocols) {
+    addToLog('Connect ' + url + ' (protocols = ' + protocols + ')');
+  } else {
+    addToLog('Connect ' + url);
+  }
+}
+
+function init() {
+    let scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+    let defaultAddress = scheme + window.location.host + '/chat/echo';
+
+
+    logBox = document.getElementById('log');
+    if (!('WebSocket' in window)) {
+        addToLog(defaultAddress);
+    }
+    connect();
+}
+
+</script>
+<link rel="stylesheet" type="text/css" href="{% static "ws/css/style.css" %}" />
+<style type="text/css">
+    .f-hidden {
+        display: none;
+    }
+</style>
+{{ query }}
+<body id="editor" onload="init()">
+
+    <iframe id="targetFrame" name="targetFrame" class="f-hidden"></iframe>
+    <form id="post-form" action="/chat/remote/" method="post" target="targetFrame">
+        {% csrf_token %}
+        <script>
+            // AJAX for posting
+            function create_post() {
+                console.log("create post is working!") // CH check
+                {#console.log($('#id_command').val())#}
+                $.ajax({
+                    url : "/chat/remote/", // the endpoint
+                    type : "POST", // http method
+                    data : { the_post : $('#id_command').val() }, // data sent with the post request
+
+                    // handle a successful response
+                    success : function(json) {
+                        $('#id_command').val(''); // remove the value from the input
+                        console.log(json); // log the returned json to the console
+                        console.log("success"); // another sanity check
+                    },
+
+                    // handle a non-successful response
+                    error : function(xhr,errmsg,err) {
+                        $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                            " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+                        console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+                    }
+                });
+            };
+
+            {#$('#post-form').on('submit', function(event){#}
+            {#    event.preventDefault();#}
+            {#    console.log("form submitted!")  // CH check#}
+            {#    create_post();#}
+            {#    return false#}
+            {#});#}
+        </script>
+        {{ command }}
+        <div id="butt">
+            <input type="submit" name="sendContent" value="发送" >
+        </div>
+
+        <div id="CodeArea">
+            <h2>输入命令：</h2>
+            <textarea id="id_command" wrap="logical" name="command"></textarea>
+        </div>
+    </form>
+
+
+	<div id="result">
+		<h2>查看结果:</h2>
+{#		<form action="rev" method="get">#}
+		<textarea id="log" wrap="logical" readonly></textarea>
+{#        </form>#}
+	</div>
+
+	<div id="footer">
+		<p>请在上面的文本框中输入命令，然后单击发送。<a href="/index.html" title="default title">localhost:8000</a></p>
+	</div>
+
+</body>
+{% endblock %}
