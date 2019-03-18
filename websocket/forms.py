@@ -11,3 +11,8 @@ class MacForm(forms.Form):
 
 class LogForm(forms.Form):
     log = forms.CharField()
+
+
+class ConsoleForm(forms.Form):
+    command = forms.CharField(widget=forms.Textarea)
+
