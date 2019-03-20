@@ -3630,7 +3630,7 @@ function() {
                 url: e,
                 type: "GET",
                 success: function(e) {
-                    t(e)
+                    // t(e)
                 }
             })
         }
@@ -6398,7 +6398,7 @@ var PenTagsController = Class.extend({
 }();
 var Copy = {
     autoSavingNow: "Autosave enabled. <a href='https://blog.codepen.io/documentation/editor/autosave/' target='_blank'>?</a>",
-    penUpdated: "Pen saved.",
+    penUpdated: "Log saved.",
     penForked: "We forked this Pen. It's saved to your account, but you can <a href='<%= url %>' target='_blank'>view it here.</a>",
     waitingForGist: "Creating GitHub Gist. Please be patient and stay awesome.",
     gistCreated: "Thanks for staying awesome. <a href='<%= url %>' target='_blank'> Here's a link to your Gist.</a>",

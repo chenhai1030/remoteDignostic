@@ -27,7 +27,7 @@ def index(request):
 def console(request):
     if request.method == 'POST':
         message = request.POST.__getitem__('value')
-        print(message)
+        # print(message)
         for client in clients:
             client.send(message)
     return render(request, 'console.html', {})
@@ -85,6 +85,10 @@ def ws_connect(request):
                     if mac is not None:
                         ws_dict = {mac: request.websocket}
                         clients.append(request.websocket)
+                        for client in clients:
+                            if client.is_closed():
+                                clients.remove(client)
+
                 # print(message)
                 if local_client is not None:
                     local_client.send(message)
