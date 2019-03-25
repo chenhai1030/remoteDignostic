@@ -1,13 +1,11 @@
 
 let socket = null;
 let logBox = null;
-let addressBox = null;
 let tr = document.createElement('tr')
 var br = document.createElement("br");
 
 function addToLog(log) {
     // logBox.value += log + '\n'
-
   tr.innerHTML += log+"<br/>";
   logBox.appendChild(tr);
   // logBox.appendChild(br)
@@ -42,7 +40,7 @@ function connect() {
     if (extraInfo.length > 0) {
       logMessage += ' (' + extraInfo.join(', ') + ')';
     }
-    addToLog(logMessage);
+    // addToLog(logMessage);
   };
   socket.onmessage = function (event) {
     if (('ArrayBuffer' in window) && (event.data instanceof ArrayBuffer)) {
@@ -80,8 +78,12 @@ function connect() {
   if (protocols) {
     addToLog('Connect ' + url + ' (protocols = ' + protocols + ')');
   } else {
-    addToLog('Connect ' + url);
+    // addToLog('Connect ' + url);
   }
+}
+
+function clear_log_click() {
+       tr.innerHTML = "";
 }
 
 function ws_init() {

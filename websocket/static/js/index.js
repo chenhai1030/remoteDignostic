@@ -2469,6 +2469,9 @@ var Pen = Class.extend({
     save: function() {
         this.save_disabled || (this._canSave() ? this._shouldForkPen() ? this._forkPen() : this._savePenToDB() : Hub.pub("pen-errors", this.errorCode))
     },
+    clear: function() {
+        Hub.pub("clear-log", {})
+    },
     forkPenInCurrentState: function() {
         this.save_disabled || (this._canSave() ? this._forkPen(!0) : Hub.pub("pen-errors", this.errorCode))
     },
@@ -2716,7 +2719,8 @@ var PenUnsavedMessage = Class.extend({
     },
     _bindToHub: function() {
         Hub.sub("live_change", $.proxy(this._onLiveChange, this)),
-        Hub.sub("pen-saved", $.proxy(this._onSaved, this))
+        Hub.sub("pen-saved", $.proxy(this._onSaved, this)),
+        Hub.sub("clear-log", $.proxy(this._onClear, this))
     },
     _startAutoSave: function() {
         this._penCanBeAutosaved() && this._conditionallyShowAutosavingNowMessage()
@@ -2750,6 +2754,9 @@ var PenUnsavedMessage = Class.extend({
         this._showPenSavedMessage(),
         this._conditionallyShowAutosavingNowMessage(),
         this.unsavedMessage.hide()
+    },
+    _onClear:function(){
+        $("#loading-text").empty()
     },
     _showPenSavedMessage: function() {
         CP.pen.autosavingNow || $.showMessage(Copy.penUpdated),
@@ -3162,6 +3169,7 @@ var PenUnsavedMessage = Class.extend({
     _bindToDOM: function() {
         var e = $("body");
         e.on("click", "#save, #update, #save-details", this._savePen),
+        e.on("click", "#clear-log", this._clearLog),
         e.on("click", "#save-as-private", this._savePenAsPrivate),
         e.on("click", "#fork", this._fork),
         e.on("click", "#run", this._runPen),
@@ -3170,6 +3178,9 @@ var PenUnsavedMessage = Class.extend({
     },
     _savePen: function() {
         CP.pen.save()
+    },
+    _clearLog: function() {
+        CP.pen.clear()
     },
     _savePenAsPrivate: function() {
         CP.pen.saveAsPrivate()

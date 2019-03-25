@@ -10,6 +10,7 @@ from django.http import QueryDict
 
 from dwebsocket import require_websocket, accept_websocket
 import threading
+import time
 
 
 clients = []
@@ -91,10 +92,25 @@ def ws_connect(request):
 
                 # print(message)
                 if local_client is not None:
-                    local_client.send(message)
+                    for msg in message.split(b'\n'):
+                    # message_str = message.decode()
+                        if msg is not b'':
+                            local_client.send(msg)
                 # tv_ws_message.append(message)
         finally:
         #     clients.remove(request.websocket)
+            lock.release()
+
+
+@require_websocket
+def ws_stream(request):
+    if request.is_websocket:
+        lock = threading.RLock()
+        try:
+            lock.acquire()
+            for message in request.websocket:
+                break
+        finally:
             lock.release()
 
 
