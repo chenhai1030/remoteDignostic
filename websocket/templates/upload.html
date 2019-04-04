@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+{% load staticfiles %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+{#<form method="POST" enctype="multipart/form-data">#}
+{#{% csrf_token %}#}
+{#<input type="file" name="img">#}
+{#<button type="submit">上传</button>#}
+{#</form>#}
+
+
+{# <form method="post" enctype="multipart/form-data">#}
+{#      Enter file: <input type="file" name="img" size="40">#}
+{#      Enter file name: <input type="text" name="filename" size="30">#}
+{#      <input type="submit" value="send" name="submit">#}
+{# </form>#}
+
+
+{#<script src="{% static '/js/jquery-3.3.1.min.js' %}"></script>#}
+{#<script>#}
+{#    function uploadFile() {#}
+{#        document.getElementById('iframe1').onload = reloadIframe1;#}
+{#        document.getElementById('fm1').submit();#}
+{#    }#}
+{#    function reloadIframe1() {#}
+{#        var content = this.contentWindow.document.body.innerHTML;#}
+{#        var obj = JSON.parse(content);#}
+{#        console.log(obj.data);    //obj.data 获取后端图片的路径#}
+{#        var tag=document.createElement("img");#}
+{#        tag.src=obj.data;#}
+{#        $("#preview").empty().append(tag)  //先清空内容在添加#}
+{#    }#}
+{##}
+{#</script>#}
+</body>
+</html>

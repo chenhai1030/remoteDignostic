@@ -1,16 +1,20 @@
 from django.shortcuts import render
 
 # Create your views here.
-from django.http import HttpResponse
+from django.http import HttpResponse, StreamingHttpResponse
+from wsgiref.util import FileWrapper
 
 from .forms import RemoteForm, ConsoleForm
 from .forms import MacForm
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from django.http import QueryDict
+from .models import IMG, UploadModel
 
 from dwebsocket import require_websocket, accept_websocket
 import threading
 import time
+import os
 
 
 clients = []
@@ -103,18 +107,6 @@ def ws_connect(request):
 
 
 @require_websocket
-def ws_stream(request):
-    if request.is_websocket:
-        lock = threading.RLock()
-        try:
-            lock.acquire()
-            for message in request.websocket:
-                break
-        finally:
-            lock.release()
-
-
-@require_websocket
 def echo(request):
     global local_client
     if request.is_websocket:
@@ -135,3 +127,41 @@ def echo(request):
         finally:
             # clients.remove(request.websocket)
             lock.release()
+
+
+@csrf_exempt
+def showImg(request):
+    imgs = IMG.objects.all()
+    content = {
+        'imgs': imgs,
+    }
+    return render(request, 'showimg.html', content)
+
+
+# file uploaded from client
+@csrf_exempt
+def upload_from_client(request):
+    if request.method == 'POST':
+        if request.FILES.get('img') is not None:
+            new_file = IMG(
+                img=request.FILES.get('img')
+            )
+        else:
+            new_file = UploadModel(
+                upload_file=request.FILES.get('upload')
+            )
+        new_file.save()
+    return render(request, 'upload.html')
+
+
+# file send to client
+@csrf_exempt
+def upload_to_client(request):
+    if request.method == 'POST':
+        if request.FILES.get('img') is not None:
+            new_file = UploadModel(
+                upload_file=request.FILES.get('upload')
+            )
+        new_file.save()
+    return render(request, 'upload.html')
+

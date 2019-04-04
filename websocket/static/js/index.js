@@ -6605,6 +6605,9 @@ NastyBrowserSniffing.isIE11OrLess() && -1 === window.location.href.indexOf("/log
         n($(".editor-resizer-console")[0]),
         n($(".box-console .powers")[0]),
         ne.on("click", ".console-toggle-button", i),
+            //added by funtv
+        ne.on("click", ".speed-test-button", speedTest),
+        ne.on("click", ".link-test-button", linkTest),
         B.on("click", o)
     }
     function n(e) {
@@ -6624,6 +6627,23 @@ NastyBrowserSniffing.isIE11OrLess() && -1 === window.location.href.indexOf("/log
     function i(e) {
         e.preventDefault(),
         CP.EditorLayout && CP.EditorLayout.toggleConsole()
+    }
+    //added by funtv
+    function speedTest(e){
+        e.preventDefault(),
+        $.post("/chat/console", {'value':'SpeedTest'});
+
+        let myFooter = document.getElementById("footer-right");
+        let newBaitTag = document.createElement('a');
+        let newBaitText = document.createTextNode("SpeedImg");
+        newBaitTag.setAttribute('href', "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+
+        newBaitTag.appendChild(newBaitText);
+        myFooter.appendChild(newBaitTag);
+    }
+    function linkTest(e){
+        e.preventDefault(),
+        $.post("/chat/console", {'value':'LinkTest'});
     }
     function o(e) {
         e.preventDefault(),

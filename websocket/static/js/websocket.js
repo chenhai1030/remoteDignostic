@@ -1,13 +1,13 @@
 
 let socket = null;
 let logBox = null;
-let tr = document.createElement('tr')
-var br = document.createElement("br");
+
 
 function addToLog(log) {
     // logBox.value += log + '\n'
-  tr.innerHTML += log+"<br/>";
-  logBox.appendChild(tr);
+
+  logBox.innerHTML += log + "<br/>"
+  // logBox.appendChild(tr);
   // logBox.appendChild(br)
 }
 
@@ -60,8 +60,7 @@ function connect() {
     if ((arguments.length == 1) && ('CloseEvent' in window) &&
         (event instanceof CloseEvent)) {
       logMessage += 'wasClean = ' + event.wasClean;
-      // code and reason are present only for
-      // draft-ietf-hybi-thewebsocketprotocol-06 and later
+
       if ('code' in event) {
         logMessage += ', code = ' + event.code;
       }
@@ -80,10 +79,6 @@ function connect() {
   } else {
     // addToLog('Connect ' + url);
   }
-}
-
-function clear_log_click() {
-       tr.innerHTML = "";
 }
 
 function ws_init() {

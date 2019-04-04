@@ -11,6 +11,8 @@
     <link rel="stylesheet" media="all" href="{% static "ws/css/editor.css" %}" />
     <link rel="stylesheet" media="screen" href="{% static "ws/css/twilight.css" %}" id="cm-theme"/>
 
+{#    <link rel="stylesheet" href="{% static "ws/css/magnific-popup.css" %}">#}
+
 <style id="cm-font-family" class="cm-font-family">
 
   .CodeMirror,
@@ -35,6 +37,7 @@
 </head>
 
 <script src="{% static '/js/jquery-3.3.1.min.js' %}"></script>
+{#<script src="{% static '/js/jquery.magnific-popup.min.js' %}"></script>#}
 <script src="{% static '/js/websocket.js' %}"></script>
 
 <body class="room-editor editor state-htmlOn-cssOn-jsOn sidebar-false preload prelayout
@@ -49,6 +52,24 @@
 
 
 <header class="main-header" id="main-header">
+<div class="item-settings-modal" id="item-settings-modal">
+    <header class="item-settings-modal-header">
+
+      <h2 class="item-settings-modal-header-title">Settings</h2>
+
+      <div class="save-and-close-wrap">
+          <input type="button" class="button button-no-right-margin green" value="Save&Close" id="close-settings">
+      </div>
+
+    </header>
+</div>
+
+<div class="upload-panel" id="upload-panel">
+    <div id="holder"></div>
+</div>
+
+
+
 <div tabindex="-1" role="group" class="header-router-wrap" style="outline: none;">
     <h1 class="Logo_root-3XNFn"><a href="/" class="Logo_small-3i6l6"><svg class="icon icon-codepen-box"><use xlink:href="#codepen-box"></use></svg></a><a href="/" class="Logo_large-3FckA"><svg class="icon icon-logo"><use xlink:href="#logo"></use></svg></a></h1>
 
@@ -62,6 +83,7 @@
     <div class="navigation-wrap">
 
         <button id="update" data-test-id="save-button" class="button button button-editor-outline"><svg class="icon icon-cloud"><use xlink:href="#cloud"></use></svg><span class="label">Save</span></button>
+        <button id="upload-file" data-test-id="upload-button" class="button button button-editor-outline"><svg class="icon icon-cloud"><use xlink:href="#cloud"></use></svg><span class="label">Upload</span></button>
         <button id="clear-log" class="button button button-editor-outline"><span class="label">Clear log</span></button>
         <button id="edit-settings" data-test-id="edit-settings" class="button button button-editor-solid"><svg class="icon icon-gear"><use xlink:href="#gear"></use></svg><span class="label">Settings</span></button>
         <button id="view-switcher-button" data-test-id="view-switcher-button" class="button button button-editor-solid view-switcher-button"><svg class="icon icon-viewswitcher"><use xlink:href="#viewswitcher"></use></svg><span class="label">Change Client</span></button>
@@ -190,20 +212,44 @@
 
 </div>
 
+
   <footer id="react-pen-footer" class="site-footer editor-footer">
       <div class="footer-left">
           <button class="button mini-button console-toggle-button">Console</button>
-          <button id="assets-link" class="button mini-button">SpeedTest</button>
+
+          <button class="button mini-button speed-test-button">SpeedTest</button>
+
+          <button class="button mini-button link-test-button">LinkTest</button>
 {#          <button class="button mini-button keyboard-commands-button">#}
 {#              <span>⌘</span>#}
 {#          </button>#}
+
+{#            <script>#}
+{#            let groups = {};#}
+{#            $('.galleryItem').each(function() {#}
+{#            let id = parseInt($(this).attr('data-group'), 10);#}
+{#            if(!groups[id]) {#}
+{#            groups[id] = [];#}
+{#            }#}
+{#            groups[id].push( this );#}
+{#            });#}
+{#            #}
+{#            $.each(groups, function() {#}
+{#            $(this).magnificPopup({#}
+{#            type: 'image',#}
+{#            closeOnContentClick: true,#}
+{#            closeBtnInside: false,#}
+{#            gallery: { enabled:true }#}
+{#            })#}
+{#            });#}
+{#            </script>#}
           <span id="bsa-footer" class="bsa-footer"></span>
       </div>
 
-{#      <div class="footer-right">#}
-{#           <button data-dropdown="#export-panel" class="button mini-button export-button" aria-expanded="false">Export</button>#}
-{#      </div>#}
 
+      <div class="footer-right" id="footer-right">
+{#           <button data-dropdown="#export-panel" class="button mini-button export-button" aria-expanded="false">Export</button>#}
+      </div>
 
   </footer>
 
@@ -220,6 +266,7 @@
 <script src="{% static '/js/emmet-codemirror-plugin.js' %}"></script>
 
 <script src="{% static '/js/index.js' %}"></script>
+
 
 </body>
 </html>
