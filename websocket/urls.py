@@ -10,7 +10,8 @@ urlpatterns = [
     path('console', views.console, name='console'),
     re_path('remote', views.remote_diagnostic, name='remote'),
     re_path('connect', views.ws_connect),
-    re_path('upload', views.upload_from_client),
+    re_path('client_upload', views.upload_from_client),
+    re_path('upload', views.upload),
     re_path('show', views.showImg),
     re_path('echo', views.echo),
 

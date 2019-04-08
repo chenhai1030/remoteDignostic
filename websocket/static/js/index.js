@@ -2469,6 +2469,13 @@ var Pen = Class.extend({
     save: function() {
         this.save_disabled || (this._canSave() ? this._shouldForkPen() ? this._forkPen() : this._savePenToDB() : Hub.pub("pen-errors", this.errorCode))
     },
+    //added by funtv
+    upload: function(){
+        Hub.pub("upload-file", {})
+    },
+    close: function(){
+        Hub.pub("close-upload-panel", {})
+    },
     clear: function() {
         Hub.pub("clear-log", {})
     },
@@ -2720,7 +2727,10 @@ var PenUnsavedMessage = Class.extend({
     _bindToHub: function() {
         Hub.sub("live_change", $.proxy(this._onLiveChange, this)),
         Hub.sub("pen-saved", $.proxy(this._onSaved, this)),
-        Hub.sub("clear-log", $.proxy(this._onClear, this))
+            //added by funtv
+        Hub.sub("clear-log", $.proxy(this._onClear, this)),
+        Hub.sub("upload-file", $.proxy(this._onUpload, this)),
+        Hub.sub("close-upload-panel", $.proxy(this._onClose, this))
     },
     _startAutoSave: function() {
         this._penCanBeAutosaved() && this._conditionallyShowAutosavingNowMessage()
@@ -2755,8 +2765,19 @@ var PenUnsavedMessage = Class.extend({
         this._conditionallyShowAutosavingNowMessage(),
         this.unsavedMessage.hide()
     },
+     //added by funtv
     _onClear:function(){
         $("#loading-text").empty()
+    },
+    _onUpload:function(){
+        if($("#upload-panel").css("visibility")=='hidden') {
+            $("#upload-panel").addClass("upload-panel open")
+        }else{
+            $("#upload-panel").removeClass("open")
+        }
+    },
+    _onClose:function(){
+        $("#upload-panel").removeClass("open")
     },
     _showPenSavedMessage: function() {
         CP.pen.autosavingNow || $.showMessage(Copy.penUpdated),
@@ -3169,6 +3190,8 @@ var PenUnsavedMessage = Class.extend({
     _bindToDOM: function() {
         var e = $("body");
         e.on("click", "#save, #update, #save-details", this._savePen),
+        e.on("click", "#upload-file", this._upload),
+        e.on("click", "#close-upload-panel", this._close),
         e.on("click", "#clear-log", this._clearLog),
         e.on("click", "#save-as-private", this._savePenAsPrivate),
         e.on("click", "#fork", this._fork),
@@ -3178,6 +3201,12 @@ var PenUnsavedMessage = Class.extend({
     },
     _savePen: function() {
         CP.pen.save()
+    },
+    _upload: function(){
+        CP.pen.upload()
+    },
+    _close: function(){
+        CP.pen.close()
     },
     _clearLog: function() {
         CP.pen.clear()
@@ -3637,13 +3666,13 @@ function() {
     }
     function t(e) {
         return new Promise(function(t) {
-            $.ajax({
-                url: e,
-                type: "GET",
-                success: function(e) {
-                    // t(e)
-                }
-            })
+            // $.ajax({
+            //     url: e,
+            //     type: "GET",
+            //     success: function(e) {
+            //         // t(e)
+            //     }
+            // })
         }
         )
     }
@@ -5687,169 +5716,6 @@ var SearchFilter = {
     window.S3.uploadScreenshotAssetToS3 = r
 }(),
 jQuery.event.props.push("dataTransfer");
-var ScreenshotUpload = {
-    screenshotWrap: $("#settings-screenshot-wrap"),
-    imageChanger: $("#screenshot-image-changer"),
-    imageHolder: $("#custom-screenshot"),
-    fileInput: $("#personal-profile-image-upload-input"),
-    theBody: $("body"),
-    deleteBtn: $("#delete-screenshot"),
-    init: function() {
-        _.extend(this, AJAXUtil),
-        this.bindUIActions()
-    },
-    bindUIActions: function() {
-        var e = this;
-        this.uploading = this.screenshotWrap.find(".uploading-message"),
-        this.imageChanger._on("drop", function(e) {
-            e.preventDefault(),
-            ScreenshotUpload.handleDrop(e)
-        }),
-        this.theBody._on("dragover", function(e) {
-            e.currentTarget === ScreenshotUpload.theBody[0] && ScreenshotUpload.testIfContainsFiles(e) && ScreenshotUpload.highlightDropArea()
-        }),
-        this.theBody._on("dragleave", function(e) {
-            e.currentTarget === ScreenshotUpload.theBody[0] && ScreenshotUpload.unHighlightDropArea()
-        }),
-        ScreenshotUpload.fileInput._on("change", function(e) {
-            ScreenshotUpload.handleManualFileSelect(e)
-        }),
-        this.screenshotWrap.on("click", "#delete-screenshot", function(t) {
-            t.preventDefault(),
-            $.showModal("/ajax/confirm_custom_screenshot_delete", "modal-warning", function() {
-                $("#confirm-delete-screenshot")._on("click", function(t) {
-                    t.preventDefault(),
-                    e.deleteScreenshot()
-                })
-            })
-        })
-    },
-    testIfContainsFiles: function(e) {
-        if (e.dataTransfer.types)
-            for (var t = 0; t < e.dataTransfer.types.length; t++)
-                if ("Files" === e.dataTransfer.types[t])
-                    return !0;
-        return !1
-    },
-    highlightDropArea: function() {
-        ScreenshotUpload.imageChanger.addClass("drop-here")
-    },
-    unHighlightDropArea: function() {
-        ScreenshotUpload.imageChanger.removeClass("drop-here")
-    },
-    handleDrop: function(e) {
-        var t = e.dataTransfer.files;
-        ScreenshotUpload.processFile(t)
-    },
-    handleManualFileSelect: function(e) {
-        var t = e.target.files;
-        ScreenshotUpload.processFile(t)
-    },
-    processFile: function(e) {
-        this.unHighlightDropArea(),
-        this._showUploadingMessage(!0);
-        var t = e[0];
-        if (t.type.match("image.*")) {
-            var n = this;
-            this.readImage(t, function(e) {
-                "string" != typeof e ? $.showMessage("Oops! We couldn't upload that image. Try again.") : (n._showSavingMessage(),
-                n._signScreenshotAndUpload(e, t))
-            })
-        } else
-            $.showMessage("Oops! That file wasn't a JPG or PNG."),
-            ScreenshotUpload.unHighlightDropArea()
-    },
-    _showSavingMessage: function() {
-        $.showMessage("Saving Screenshot...")
-    },
-    _showSavedMessage: function() {
-        $.showMessage("Pen Screenshot is saved. It may take a minute to update everywhere.")
-    },
-    _signScreenshotAndUpload: function(e, t) {
-        var n = this.dataURItoBlob(e)
-          , s = this.fileExtension(t.name)
-          , i = this;
-        S3.uploadScreenshotAssetToS3("pen", t, n, s, function(e) {
-            e.success ? setTimeout(function() {
-                i.saveScreenshot(e.url)
-            }, 500) : $.showMessage("Oops! We couldn't upload that image. Try again.")
-        })
-    },
-    fileExtension: function(e) {
-        return e.split(".").pop()
-    },
-    dataURItoBlob: function(e) {
-        for (var t = atob(e.split(",")[1]), n = new ArrayBuffer(t.length), s = new Uint8Array(n), i = 0; i < t.length; i++)
-            s[i] = t.charCodeAt(i);
-        return new Blob([n],{
-            type: "image/jpeg"
-        })
-    },
-    readImage: function(e, t) {
-        var n = new FileReader;
-        n.onload = function() {
-            t(this.result)
-        }
-        ,
-        n.readAsDataURL(e),
-        n.onabort = function() {
-            $.showMessage("The upload was aborted.")
-        }
-        ,
-        n.onerror = function() {
-            $.showMessage("An error occurred while reading the file.")
-        }
-    },
-    placeScreenshot: function(e, t) {
-        this.screenshotWrap.html(t),
-        $("#custom-screenshot").css("background-image", "url(" + e + "?" + Date.now() + ")"),
-        this.deleteBtn.show(),
-        this.uploading = this.screenshotWrap.find(".uploading-message")
-    },
-    removeScreenshot: function(e, t) {
-        this.screenshotWrap.html(t),
-        this.deleteBtn.hide(),
-        this.uploading = this.screenshotWrap.find(".uploading-message")
-    },
-    saveScreenshot: function(e) {
-        var t = this
-          , n = {
-            item_type: "pen",
-            item_id: CP.pen.slug_hash
-        };
-        null === CP.pen.custom_screenshot ? this.post("/custom_screenshot", n, function(n) {
-            t._successfulUpdate(n, e)
-        }) : this.put("/custom_screenshot/" + CP.pen.custom_screenshot, n, function(n) {
-            t._successfulUpdate(n, e)
-        })
-    },
-    _successfulUpdate: function(e, t) {
-        CP.pen.custom_screenshot = e.screenshot_hashid,
-        this._showSavedMessage(),
-        this.placeScreenshot(t, e.description_html),
-        this._showUploadingMessage(!1)
-    },
-    deleteScreenshot: function() {
-        this.del("/custom_screenshot/" + CP.pen.custom_screenshot, {
-            item_type: "pen",
-            item_id: CP.pen.slug_hash
-        }, function(e) {
-            $.hideModal(),
-            this.removeScreenshot(e.screenshot_url_large, e.description_html),
-            CP.pen.custom_screenshot = null
-        })
-    },
-    _showUploadingMessage: function(e) {
-        e ? this.uploading.css({
-            opacity: 1,
-            visibility: "visible"
-        }) : this.uploading.css({
-            opacity: 0,
-            visibility: "hidden"
-        })
-    }
-};
-ScreenshotUpload.init();
 var SettingsController = Class.extend({
     popupName: "penSettings",
     init: function() {

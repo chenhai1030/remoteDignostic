@@ -7,9 +7,9 @@ from wsgiref.util import FileWrapper
 from .forms import RemoteForm, ConsoleForm
 from .forms import MacForm
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
-from django.http import QueryDict
+
 from .models import IMG, UploadModel
+from django.conf import settings
 
 from dwebsocket import require_websocket, accept_websocket
 import threading
@@ -165,3 +165,16 @@ def upload_to_client(request):
         new_file.save()
     return render(request, 'upload.html')
 
+
+@csrf_exempt
+def upload(request):
+    if request.method == 'POST':
+        for file in request.FILES:
+            data = request.FILES.get(file)
+            file_path = os.path.join(settings.MEDIA_ROOT, 'upload', file)
+            # print(">>>")
+            # print(file_path)
+            # print("<<<")
+            with open(file_path, 'wb+') as f:
+                f.write(data.read())
+    return render(request, 'upload.html')

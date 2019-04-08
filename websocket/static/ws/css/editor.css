@@ -1676,9 +1676,6 @@ body.layout-side .your-files-header {
     -webkit-transform-origin: center center;
     transform-origin: center center
 }
-body.safari10 .item-settings-modal {
-    height: 600px
-}
 .item-settings-modal::before {
     display: none
 }
