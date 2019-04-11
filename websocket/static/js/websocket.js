@@ -79,7 +79,7 @@ function connect() {
   }
 
 let heartCheck = {
-  timeout: 55000,
+  timeout: 550, //9min
   serverTimeoutObj: null,
   reset: function(){
             clearTimeout(this.serverTimeoutObj);
@@ -91,7 +91,6 @@ let heartCheck = {
               socket.send("ping");
               heartCheck.reset().start();    //
           }else{
-              // console.log("断开状态，尝试重连");
               connect();
           }
       }, this.timeout)

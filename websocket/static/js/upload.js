@@ -69,7 +69,7 @@ function upload_file(){
 		setTimeout(blink,200);
 		return false;
 	}
-	let data=Dragfiles(); //获取formData
+	let data = Dragfiles(); //获取formData
 	$.ajax({
 		url: 'upload',
 		type: 'POST',
@@ -80,13 +80,14 @@ function upload_file(){
 		processData: false,
 		success: function (data) {
 			alert('succeed!')
-			//closeModal();
-			data.deleteAll; //清空formData
-			// $('.tbody').empty(); //清空列表
+			data.deleteAll; //clear formData
 			document.getElementsByTagName('tbody')[0].innerHTML='';
 		},
-		error: function (returndata) {
-			alert('failed!')  //可以替换为自己的方法
+		error: function(xhr, exception){
+			if( xhr.status === 413){
+				alert('Error : ' + xhr.status + 'Request Entity Too Large');
+			}else
+				alert('failed!')  //可以替换为自己的方法
 		}
 	});
 }
@@ -107,7 +108,7 @@ function clearAll(){
 		return false;
 	}
 	let data=Dragfiles();
-	data.deleteAll(); //清空formData
+	data.deleteAll(); //clean formData
 	//$('.tbody').empty(); 等同于以下方法
 	document.getElementsByTagName('tbody')[0].innerHTML='';
 }
