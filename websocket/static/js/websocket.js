@@ -4,11 +4,7 @@ let logBox = null;
 
 
 function addToLog(log) {
-    // logBox.value += log + '\n'
-
   logBox.innerHTML += log + "<br/>"
-  // logBox.appendChild(tr);
-  // logBox.appendChild(br)
 }
 
 function connect() {
@@ -40,7 +36,8 @@ function connect() {
     if (extraInfo.length > 0) {
       logMessage += ' (' + extraInfo.join(', ') + ')';
     }
-    // addToLog(logMessage);
+    addToLog(logMessage);
+    heartCheck.reset().start();
   };
   socket.onmessage = function (event) {
     if (('ArrayBuffer' in window) && (event.data instanceof ArrayBuffer)) {
@@ -50,6 +47,7 @@ function connect() {
       addToLog('< Received a Blob of ' + event.data.size + ' bytes')
     } else {
       addToLog('< ' + event.data);
+      heartCheck.reset().start();
     }
   };
   socket.onerror = function () {
@@ -79,7 +77,29 @@ function connect() {
   } else {
     // addToLog('Connect ' + url);
   }
+
+let heartCheck = {
+  timeout: 55000,
+  serverTimeoutObj: null,
+  reset: function(){
+            clearTimeout(this.serverTimeoutObj);
+            return this;
+        },
+  start: function(){
+      this.serverTimeoutObj = setInterval(function(){
+          if(socket.readyState == 1){
+              socket.send("ping");
+              heartCheck.reset().start();    //
+          }else{
+              // console.log("断开状态，尝试重连");
+              connect();
+          }
+      }, this.timeout)
+  }
 }
+}
+
+
 
 function ws_init() {
     let scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
