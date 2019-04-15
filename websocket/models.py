@@ -11,5 +11,4 @@ class IMG(models.Model):
 
 
 class UploadModel(models.Model):
-    upload_file = models.ImageField(upload_to='upload')
-
+    upload_file = models.FileField(upload_to='upload')

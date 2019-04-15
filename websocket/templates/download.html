@@ -5,7 +5,7 @@
     <title>Title</title>
 </head>
 <body>
-<h2>Directory listing for img/</h2>
+<h2>Directory listing for upload/</h2>
 <hr>
 <ul>
 
@@ -13,10 +13,9 @@
 {#<img src='{{ img.img.url }}' />#}
 {#{% endfor %}#}
 
-    {% for img in imgs %}
-        <li><a href='{{ img.img.url }}'>'{{ img.img.url }}'</a>
+    {% for file in files %}
+        <li><a href='{{ file.upload_file.url }}'>'{{ file.upload_file.url }}'</a>
     {% endfor %}
-
 </ul>
 <hr>
 </body>

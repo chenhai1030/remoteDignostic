@@ -2,14 +2,15 @@
 let socket = null;
 let logBox = null;
 
+let scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
+let defaultAddress = scheme + window.location.host + '/chat/echo';
+
 
 function addToLog(log) {
   logBox.innerHTML += log + "<br/>"
 }
 
 function connect() {
-    let scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
-    let defaultAddress = scheme + window.location.host + '/chat/echo';
     let url = defaultAddress;
     let protocols = 0;
 
@@ -91,7 +92,7 @@ let heartCheck = {
               socket.send("ping");
               heartCheck.reset().start();    //
           }else{
-              connect();
+              // connect();
           }
       }, this.timeout)
   }
@@ -101,9 +102,6 @@ let heartCheck = {
 
 
 function ws_init() {
-    let scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
-    let defaultAddress = scheme + window.location.host + '/chat/echo';
-
 
     logBox = document.getElementById("loading-text");
     if (!('WebSocket' in window)) {

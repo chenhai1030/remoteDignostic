@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, StreamingHttpResponse
 from wsgiref.util import FileWrapper
 
-from .forms import RemoteForm, ConsoleForm
+from .forms import RemoteForm
 from .forms import MacForm
 from django.views.decorators.csrf import csrf_exempt
 
@@ -130,12 +130,21 @@ def echo(request):
 
 
 @csrf_exempt
-def showImg(request):
+def show_img(request):
     imgs = IMG.objects.all()
     content = {
         'imgs': imgs,
     }
     return render(request, 'showimg.html', content)
+
+
+@csrf_exempt
+def show_downloadable_files(request):
+    files = UploadModel.objects.all()
+    content = {
+        'files': files,
+    }
+    return render(request, 'download.html', content)
 
 
 # file uploaded from client

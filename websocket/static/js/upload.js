@@ -9,6 +9,8 @@ let Dragfiles = (function (){
 	}
 }());
 
+
+
 //为Dragfiles添加一个清空所有文件的方法
 FormData.prototype.deleteAll=function () {
 	let _this=this;
@@ -39,7 +41,7 @@ dz.ondrop = function (ev) {
 	let frag=document.createDocumentFragment();  //为了减少js修改dom树的频度，先创建一个fragment，然后在fragment里操作
 	let tr,time,size, displayName;
 	let newForm=Dragfiles(); //获取单例
-	let it=newForm.entries(); //创建一个迭代器，测试用
+	// let it=newForm.entries(); //创建一个迭代器，测试用
 	while(i<len){
 		tr=document.createElement('tr');
 		//获取文件大小
@@ -51,7 +53,7 @@ dz.ondrop = function (ev) {
 		console.log(size+' '+time);
 		frag.appendChild(tr);
 		//添加文件到newForm
-		newForm.append(files[i].name,files[i]);
+		newForm.append(files[i].name, files[i]);
 		//console.log(it.next());
 		i++;
 	}
@@ -80,6 +82,9 @@ function upload_file(){
 		processData: false,
 		success: function (data) {
 			alert('succeed!')
+
+			send_file_to_clent();
+
 			data.deleteAll; //clear formData
 			document.getElementsByTagName('tbody')[0].innerHTML='';
 		},
@@ -90,6 +95,15 @@ function upload_file(){
 				alert('failed!')  //可以替换为自己的方法
 		}
 	});
+}
+
+function send_file_to_clent(){
+	let data=Dragfiles();
+	data.forEach(function (value, key) {
+		console.log(key);
+		let cmd = 'busybox wget -c ' + window.location.protocol + "//" +window.location.hostname + ':' +window.location.port + '/media/upload/' + key + ' -P /tmp';
+		$.post("/chat/console", {'value': cmd});
+	})
 }
 
 $(".tbody").on('click','tr td:last-child',function(){

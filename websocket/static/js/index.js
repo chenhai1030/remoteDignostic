@@ -6499,13 +6499,13 @@ NastyBrowserSniffing.isIE11OrLess() && -1 === window.location.href.indexOf("/log
         e.preventDefault(),
         $.post("/chat/console", {'value':'SpeedTest'});
 
-        let myFooter = document.getElementById("footer-right");
-        let newBaitTag = document.createElement('a');
-        let newBaitText = document.createTextNode("SpeedImg");
-        newBaitTag.setAttribute('href', "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-
-        newBaitTag.appendChild(newBaitText);
-        myFooter.appendChild(newBaitTag);
+        // let myFooter = document.getElementById("footer-right");
+        // let newBaitTag = document.createElement('a');
+        // let newBaitText = document.createTextNode("SpeedImg");
+        // newBaitTag.setAttribute('href', "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
+        //
+        // newBaitTag.appendChild(newBaitText);
+        // myFooter.appendChild(newBaitTag);
     }
     function linkTest(e){
         e.preventDefault(),
