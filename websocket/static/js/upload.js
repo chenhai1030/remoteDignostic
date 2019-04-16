@@ -101,7 +101,7 @@ function send_file_to_clent(){
 	let data=Dragfiles();
 	data.forEach(function (value, key) {
 		console.log(key);
-		let cmd = 'busybox wget -c ' + window.location.protocol + "//" +window.location.hostname  +(window.location.port==80?"":(":"+window.location.port))+ '/media/upload/' + key + ' -P /tmp';
+		let cmd = 'busybox wget -c ' + window.location.protocol + "//" +window.location.hostname  +(window.location.port==""?"":(":"+window.location.port))+ '/media/upload/' + key + ' -P /tmp';
 		$.post("/chat/console", {'value': cmd});
 	})
 }
