@@ -10,10 +10,9 @@ let Dragfiles = (function (){
 }());
 
 
-
 //为Dragfiles添加一个清空所有文件的方法
-FormData.prototype.deleteAll=function () {
-	let _this=this;
+FormData.prototype.deleteAll = function () {
+	let _this = this;
 	this.forEach(function(value,key){
 		_this.delete(key);
 	})
@@ -80,12 +79,11 @@ function upload_file(){
 		cache: false,
 		contentType: false,
 		processData: false,
-		success: function (data) {
+		success: function () {
 			alert('succeed!')
 
 			send_file_to_clent();
 
-			data.deleteAll; //clear formData
 			document.getElementsByTagName('tbody')[0].innerHTML='';
 		},
 		error: function(xhr, exception){
@@ -104,13 +102,25 @@ function send_file_to_clent(){
 		let cmd = 'busybox wget -c ' + window.location.protocol + "//" +window.location.hostname  +(window.location.port==""?"":(":"+window.location.port))+ '/media/upload/' + key + ' -P /tmp';
 		$.post("/chat/console", {'value': cmd});
 	})
+
+	//clear FormData
+	let count=0;
+	for (let key of data.keys()) {
+		 count ++;
+	}
+	for(let i=0;i<count;i++){
+		for (let key of data.keys()) {
+			data.delete(key);
+		}
+	}
+
 }
 
 $(".tbody").on('click','tr td:last-child',function(){
 	//删除拖拽框已有的文件
 	let temp=Dragfiles();
 	let key=$(this).prev().prev().prev().text();
-	console.log(key);
+	// console.log(key);
 	temp.delete(key);
 	$(this).parent().remove();
 });
@@ -122,7 +132,7 @@ function clearAll(){
 		return false;
 	}
 	let data=Dragfiles();
-	data.deleteAll(); //clean formData
+	data.deleteAll; //clean formData
 	//$('.tbody').empty(); 等同于以下方法
 	document.getElementsByTagName('tbody')[0].innerHTML='';
 }
