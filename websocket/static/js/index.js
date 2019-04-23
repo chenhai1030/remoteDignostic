@@ -1884,8 +1884,18 @@ function() {
         var t = R[CP.ui.editorSizes.console];
         t === undefined && (t = "1"),
         e += t;
-        var n = window.location
-          , s = n.protocol + "//" + n.host + n.pathname + ("1110" === e ? "" : "?editors=" + e);
+        var n = window.location;
+        var s = "";
+        if (n.search == 0){
+            s = n.protocol + "//" + n.host + n.pathname + ("1110" === e ? "" : "?editors=" + e);
+        }else{
+            if (n.href.indexOf("editors") > 0){
+                s = n.href.replace("editors=1111", "");
+                s = s.replace("&", "");
+            }else{
+                s = n.href+ ("1110" === e ? "" : "&editors=" + e);
+            }
+        }
         history.replaceState("", "", s)
     }
     CP.CodeEditorsResizeView = {};
@@ -2473,6 +2483,12 @@ var Pen = Class.extend({
     upload: function(){
         Hub.pub("upload-file", {})
     },
+    changeClient:function(){
+        Hub.pub("change-client", {})
+    },
+    closeChangeClient:function(){
+        Hub.pub("close-change-client-panel", {})
+    },
     close: function(){
         Hub.pub("close-upload-panel", {})
     },
@@ -2730,7 +2746,9 @@ var PenUnsavedMessage = Class.extend({
             //added by funtv
         Hub.sub("clear-log", $.proxy(this._onClear, this)),
         Hub.sub("upload-file", $.proxy(this._onUpload, this)),
-        Hub.sub("close-upload-panel", $.proxy(this._onClose, this))
+        Hub.sub("close-upload-panel", $.proxy(this._onClose, this)),
+        Hub.sub("change-client", $.proxy(this._onClientChange, this)),
+        Hub.sub("close-change-client-panel", $.proxy(this._onClientChangeClose, this))
     },
     _startAutoSave: function() {
         this._penCanBeAutosaved() && this._conditionallyShowAutosavingNowMessage()
@@ -2768,6 +2786,17 @@ var PenUnsavedMessage = Class.extend({
      //added by funtv
     _onClear:function(){
         $("#loading-text").empty()
+    },
+    _onClientChange:function(){
+        if($("#change-client-panel").css("visibility")=='hidden') {
+            $("#change-client-panel").addClass("change-client-panel open")
+            // loadMac()
+        }else{
+            $("#change-client-panel").removeClass("open")
+        }
+    },
+    _onClientChangeClose:function(){
+        $("#change-client-panel").removeClass("open")
     },
     _onUpload:function(){
         if($("#upload-panel").css("visibility")=='hidden') {
@@ -3191,6 +3220,8 @@ var PenUnsavedMessage = Class.extend({
         var e = $("body");
         e.on("click", "#save, #update, #save-details", this._savePen),
         e.on("click", "#upload-file", this._upload),
+        e.on("click", "#change-client", this._changeClient),
+        e.on("click", "#close-change-client-panel", this._closeChangeClient),
         e.on("click", "#close-upload-panel", this._close),
         e.on("click", "#clear-log", this._clearLog),
         e.on("click", "#save-as-private", this._savePenAsPrivate),
@@ -3207,6 +3238,12 @@ var PenUnsavedMessage = Class.extend({
     },
     _close: function(){
         CP.pen.close()
+    },
+    _changeClient:function(){
+        CP.pen.changeClient()
+    },
+    _closeChangeClient:function(){
+        CP.pen.closeChangeClient()
     },
     _clearLog: function() {
         CP.pen.clear()

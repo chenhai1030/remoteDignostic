@@ -2,19 +2,20 @@ from django.shortcuts import render
 
 # Create your views here.
 from django.http import HttpResponse, StreamingHttpResponse
-from wsgiref.util import FileWrapper
+from django.core import serializers
 
 from .forms import RemoteForm
 from .forms import MacForm
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import IMG, UploadModel
+from .models import IMG, UploadModel, MacModel
 from django.conf import settings
 
 from dwebsocket import require_websocket, accept_websocket
 import threading
 import time
 import os
+import json
 
 
 clients = []
@@ -54,17 +55,29 @@ def remote_diagnostic(request):
     return render(request, 'remote_diagnostic.html', {})
 
 
-def client_mac_list(request, mac):
-    form = MacForm()
-    return render(request, 'remote_diagnostic.html', {'form': form})
-
-
 def get_macaddr(line):
     mac = None
     if line.startswith(b'Macaddr:'):
         line = line.decode()
         mac = ":".join(line.split(":")[1:])
     return mac
+
+
+def if_mac_exists(mac):
+    global ws_dict
+    if not ws_dict:
+        return False
+    else:
+        try:
+            print(">>>")
+            print(ws_dict[mac])
+            print("<<<")
+            if ws_dict[mac]:
+                return True
+        except:
+            print("error if_mac_exists")
+    return True
+
 
 
 @require_websocket
@@ -87,20 +100,32 @@ def ws_connect(request):
                     break
                 else:
                     mac = get_macaddr(message)
-                    if mac is not None:
-                        ws_dict = {mac: request.websocket}
-                        clients.append(request.websocket)
-                        for client in clients:
-                            if client.is_closed():
-                                clients.remove(client)
+                    if mac is None:
+                        # print(message)
+                        if local_client is not None:
+                            for msg in message.split(b'\n'):
+                                # message_str = message.decode()
+                                if msg is not b'':
+                                    local_client.send(msg)
+                        # tv_ws_message.append(message)
+                        break
+                    if not if_mac_exists(mac):
+                        # save the mac
+                        MacModel(mac_addr=mac).save()
+                    # update ws_dict[mac]
+                    ws_dict[mac] = request.websocket
+                    clients.append(request.websocket)
+                    # for client in clients:
+                    #     if client.is_closed():
+                    #         print("closed client")
+                    #         clients.remove(client)
+                    #         for key in ws_dict.keys():
+                    #             if ws_dict[key] is client:
+                    #                 print(key)
+                    #                 macdb = MacModel.objects.get(mac_addr=key)
+                    #                 print(macdb)
+                                    # macdb.delete()
 
-                # print(message)
-                if local_client is not None:
-                    for msg in message.split(b'\n'):
-                    # message_str = message.decode()
-                        if msg is not b'':
-                            local_client.send(msg)
-                # tv_ws_message.append(message)
         finally:
         #     clients.remove(request.websocket)
             lock.release()
@@ -181,9 +206,34 @@ def upload(request):
         for file in request.FILES:
             data = request.FILES.get(file)
             file_path = os.path.join(settings.MEDIA_ROOT, 'upload', file)
-            # print(">>>")
-            # print(file_path)
-            # print("<<<")
+
             with open(file_path, 'wb+') as f:
                 f.write(data.read())
+    # useless render
     return render(request, 'upload.html')
+
+
+@csrf_exempt
+def client_mac(request):
+    if request.method == 'POST':
+        mac_dict = json.loads(request.body.decode('utf-8'))
+        mac = mac_dict['mac']
+
+        bind_ws_by_mac(mac)
+    # useless render
+    return render(request, 'upload.html')
+
+
+def macs(request):
+    mac = MacModel.objects.all()
+    mac_json = json.dumps(serializers.serialize("json", mac))
+    response = HttpResponse()
+    response['Content-Type'] = "text/javascript"
+    response.write(mac_json)
+    return response
+
+
+def bind_ws_by_mac(mac):
+    print(mac)
+    return ""
+

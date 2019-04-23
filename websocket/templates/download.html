@@ -13,9 +13,15 @@
 {#<img src='{{ img.img.url }}' />#}
 {#{% endfor %}#}
 
-    {% for file in files %}
-        <li><a href='{{ file.upload_file.url }}'>'{{ file.upload_file.url }}'</a>
-    {% endfor %}
+{#    {% if files.upload_file %}#}
+{#        {% for file in files %}#}
+{#            <li><a href='{{ file.upload_file.url }}'>'{{ file.upload_file.url }}'</a>#}
+{#        {% endfor %}#}
+{#    {% endif %}#}
+
+        {% for file in files %}
+            <li><a href='{{ file.file_url|default_if_none:'#' }}'>'{{ file.file_url|default_if_none:'#' }}'</a>
+        {% endfor %}
 </ul>
 <hr>
 </body>

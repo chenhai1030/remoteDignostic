@@ -9,10 +9,6 @@
 <hr>
 <ul>
 
-{#{% for img in imgs %}#}
-{#<img src='{{ img.img.url }}' />#}
-{#{% endfor %}#}
-
     {% for img in imgs %}
         <li><a href='{{ img.img.url }}'>'{{ img.img.url }}'</a>
     {% endfor %}

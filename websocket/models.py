@@ -2,8 +2,8 @@ from django.db import models
 
 
 # Create your models here.
-class SimpleModel(models.Model):
-    mac_list = models.CharField(max_length=64)
+class MacModel(models.Model):
+    mac_addr = models.CharField(max_length=20)
 
 
 class IMG(models.Model):
@@ -12,3 +12,8 @@ class IMG(models.Model):
 
 class UploadModel(models.Model):
     upload_file = models.FileField(upload_to='upload')
+
+    @property
+    def file_url(self):
+        if self.upload_file and hasattr(self.upload_file, 'url'):
+            return self.upload_file.url
