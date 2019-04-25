@@ -5,37 +5,88 @@ from django.http import HttpResponse, StreamingHttpResponse
 from django.core import serializers
 
 from .forms import RemoteForm
-from .forms import MacForm
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import IMG, UploadModel, MacModel
 from django.conf import settings
 
+
 from dwebsocket import require_websocket, accept_websocket
 import threading
-import time
+
 import os
 import json
 
+from apscheduler.schedulers.background import BackgroundScheduler
+from django_apscheduler.jobstores import DjangoJobStore, register_events, register_job
+
+
+from collections import defaultdict
 
 clients = []
 local_client = None
-ws_dict = {}
 
-tv_ws_message = []
+# struct:
+# key : value
+# mac : request.websocket
+ws_dict = {}
+web_ws_dict = {}
+
+# struct:
+# key : value
+# mac : [message list]
+tv_ws_message = defaultdict(list)
+
+
+try:
+    # 实例化调度器
+    scheduler = BackgroundScheduler()
+    # 调度器使用DjangoJobStore()
+    scheduler.add_jobstore(DjangoJobStore(), "default")
+    # 设置定时任务，选择方式为interval，时间间隔为1s
+    # 另一种方式为每天固定时间执行任务，对应代码为：
+    # @register_job(scheduler, 'cron', day_of_week='mon-fri', hour='9', minute='30', second='10',id='task_time')
+    @register_job(scheduler,"interval", seconds=1)
+    def dispatch_message():
+        global web_ws_dict
+        try:
+            if not web_ws_dict:
+                return
+            else:
+                for key in web_ws_dict.keys():
+                    msg_len = len(tv_ws_message[key])
+                    # print(tv_ws_message[key][msg_len-1])
+                    if msg_len > 0:
+                        print("dispatch_message mac: " + key)
+                        for msg in tv_ws_message[key].pop(0).split(b'\n'):
+                            if msg is not b'':
+                                web_ws_dict[key].send(msg)
+
+
+        except:
+            pass
+    register_events(scheduler)
+    scheduler.start()
+except Exception as e:
+    print(e)
+    # 有错误就停止定时器
+    scheduler.shutdown()
 
 
 def index(request):
     return render(request, 'diagnostic.html', {})
 
 
+
 @csrf_exempt
 def console(request):
     if request.method == 'POST':
         message = request.POST.__getitem__('value')
-        # print(message)
+        print(message)
         for client in clients:
             client.send(message)
+
+
     return render(request, 'console.html', {})
 
 
@@ -56,10 +107,12 @@ def remote_diagnostic(request):
 
 
 def get_macaddr(line):
-    mac = None
     if line.startswith(b'Macaddr:'):
         line = line.decode()
         mac = ":".join(line.split(":")[1:])
+    else:
+        line = line.decode()
+        mac = "".join(line.split("/")[3:])
     return mac
 
 
@@ -69,79 +122,83 @@ def if_mac_exists(mac):
         return False
     else:
         try:
-            print(">>>")
-            print(ws_dict[mac])
-            print("<<<")
             if ws_dict[mac]:
                 return True
         except:
-            print("error if_mac_exists")
-    return True
-
+            print("error if_mac_exists " + mac)
+    return False
 
 
 @require_websocket
 def ws_connect(request):
     global local_client
     global ws_dict
-    if request.is_websocket:
-        if request.websocket.is_closed():
-            print("ws is closed!")
-        lock = threading.RLock()
-        try:
-            lock.acquire()
-            for message in request.websocket:
-                if not message:
-                    for key in ws_dict:
-                        if ws_dict[key] == request.websocket:
-                            if request.websocket.is_closed():
-                                del ws_dict[key]
-                                break
-                    break
-                else:
+
+    if request.websocket.is_closed():
+        print("ws is closed!")
+    lock = threading.RLock()
+    try:
+        lock.acquire()
+        for message in request.websocket:
+            if not message:
+                for key in ws_dict:
+                    if ws_dict[key] == request.websocket:
+                        if request.websocket.is_closed():
+                            del ws_dict[key]
+                            break
+                break
+            else:
+                if message.startswith(b'Macaddr:'):
                     mac = get_macaddr(message)
-                    if mac is None:
-                        # print(message)
-                        if local_client is not None:
-                            for msg in message.split(b'\n'):
-                                # message_str = message.decode()
-                                if msg is not b'':
-                                    local_client.send(msg)
-                        # tv_ws_message.append(message)
-                        break
-                    if not if_mac_exists(mac):
+                    # format mac from xx:xx:xx:xx:xx to xxxxxxxxxx
+                    mac_format = mac.replace(":", "")
+                    if not if_mac_exists(mac_format):
                         # save the mac
+                        # save mac as xx:xx:xx:xx:xx
                         MacModel(mac_addr=mac).save()
                     # update ws_dict[mac]
-                    ws_dict[mac] = request.websocket
-                    clients.append(request.websocket)
-                    # for client in clients:
-                    #     if client.is_closed():
-                    #         print("closed client")
-                    #         clients.remove(client)
-                    #         for key in ws_dict.keys():
-                    #             if ws_dict[key] is client:
-                    #                 print(key)
-                    #                 macdb = MacModel.objects.get(mac_addr=key)
-                    #                 print(macdb)
-                                    # macdb.delete()
 
-        finally:
-        #     clients.remove(request.websocket)
-            lock.release()
+                    ws_dict[mac_format] = request.websocket
+                    clients.append(request.websocket)
+                else:
+                    # if local_client is not None:
+                    #     for msg in message.split(b'\n'):
+                    #         if msg is not b'':
+                    #             local_client.send(msg)
+
+                    append_message(request.websocket, message)
+                    break
+
+                # for client in clients:
+                #     if client.is_closed():
+                #         print("closed client")
+                #         clients.remove(client)
+                #         for key in ws_dict.keys():
+                #             if ws_dict[key] is client:
+                #                 print(key)
+                #                 macdb = MacModel.objects.get(mac_addr=key)
+                #                 print(macdb)
+                                # macdb.delete()
+
+    finally:
+    #     clients.remove(request.websocket)
+        lock.release()
 
 
 @require_websocket
 def echo(request):
     global local_client
+    global web_ws_dict
     if request.is_websocket:
         lock = threading.RLock()
         try:
             lock.acquire()
-            if local_client is None:
-                local_client = request.websocket
 
-            for message in local_client:
+            mac = get_macaddr(request.get_full_path().encode(encoding="utf-8"))
+            if mac is not None:
+                web_ws_dict[mac] = request.websocket
+
+            for message in request.websocket:
                 if not message:
                     if request.websocket.is_closed():
                         local_client = None
@@ -234,6 +291,16 @@ def macs(request):
 
 
 def bind_ws_by_mac(mac):
-    print(mac)
+
     return ""
+
+
+def append_message(ws_client, msg):
+    for key in web_ws_dict.keys():
+        print("append_message mac: "+ key)
+        if ws_dict[key] == ws_client:
+            tv_ws_message[key].append(msg)
+    return
+
+
 

@@ -1,17 +1,19 @@
 
 let socket = null;
 let logBox = null;
+let logBoxEnd = null;
 
 let scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
 let defaultAddress = scheme + window.location.host + '/chat/echo';
 
 
 function addToLog(log) {
-  logBox.innerHTML += log + "<br/>"
+  logBox.innerHTML += log + "<br/>";
+  logBoxEnd.scrollIntoView();
 }
 
-function connect() {
-    let url = defaultAddress;
+function ws_connect(mac) {
+    let url = defaultAddress + "/" + mac.replace(/\:/g,"");
     let protocols = 0;
 
   if ('WebSocket' in window) {
@@ -33,7 +35,7 @@ function connect() {
       extraInfo.push('extensions = ' + socket.extensions);
     }
 
-    let logMessage = 'Opened';
+    let logMessage = mac+' Opened';
     if (extraInfo.length > 0) {
       logMessage += ' (' + extraInfo.join(', ') + ')';
     }
@@ -76,36 +78,33 @@ function connect() {
   if (protocols) {
     addToLog('Connect ' + url + ' (protocols = ' + protocols + ')');
   } else {
-    // addToLog('Connect ' + url);
+    addToLog('Connect ' + url);
   }
 
-let heartCheck = {
-  timeout: 550, //9min
-  serverTimeoutObj: null,
-  reset: function(){
-            clearTimeout(this.serverTimeoutObj);
-            return this;
-        },
-  start: function(){
-      this.serverTimeoutObj = setInterval(function(){
-          if(socket.readyState == 1){
-              socket.send("ping");
-              heartCheck.reset().start();    //
-          }else{
-              // connect();
-          }
-      }, this.timeout)
-  }
+    let heartCheck = {
+      timeout: 550, //9min
+      serverTimeoutObj: null,
+      reset: function(){
+                clearTimeout(this.serverTimeoutObj);
+                return this;
+            },
+      start: function(){
+          this.serverTimeoutObj = setInterval(function(){
+              if(socket.readyState == 1){
+                  // socket.send("ping");
+                  // heartCheck.reset().start();    //
+              }else{
+                  // ws_connect();
+              }
+          }, this.timeout)
+      }
+    }
 }
-}
-
-
 
 function ws_init() {
-
     logBox = document.getElementById("loading-text");
+    logBoxEnd = document.getElementById("loading-text-end");
     if (!('WebSocket' in window)) {
         addToLog(defaultAddress);
     }
-    connect();
 }

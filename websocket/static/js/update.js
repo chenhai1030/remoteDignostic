@@ -24,7 +24,6 @@ function timeDown(limit, i) {
 function client_submit()
 {
     let item = $("[name='client-mac']").filter(":checked");
-    // console.log(item.attr("value"))
     mac = item.attr("value")
 
     $.ajax({
@@ -39,9 +38,15 @@ function client_submit()
         processData: false,
         success: function () {
             // alert('success!')
-            let n = window.location
-            , s = n.href + (n.href.indexOf("editors")>0 ? "&" : "?") + "macaddr=" + mac.replace(/\:/g,"");
+            let n = window.location;
+            let s = null;
+            if (n.href.indexOf("macaddr")>0){
+                s = n.href.replace(/macaddr=.*/, "") + "macaddr=" + mac.replace(/\:/g,"");
+            }else{
+                s = n.href + (n.href.indexOf("editors")>0 ? "&" : "?") + "macaddr=" + mac.replace(/\:/g,"");
+            }
             history.replaceState("", "", s)
+            ws_connect(mac)
         },
         error: function(xhr, exception){
             if( xhr.status === 413){
