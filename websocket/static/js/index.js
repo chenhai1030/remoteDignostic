@@ -945,6 +945,8 @@ var CodeEditorAnalyze = Class.extend({
         e.keyCode && !0 !== U) {
             switch (e.keyCode) {
             case 13:
+                //added by funtv
+                addToLog("");
                 if (!e.shiftKey)
                     return e.preventDefault(),
                     void a();
@@ -1889,6 +1891,7 @@ function() {
         if (n.search == 0){
             s = n.protocol + "//" + n.host + n.pathname + ("1110" === e ? "" : "?editors=" + e);
         }else{
+            //mdy by funtv
             if (n.href.indexOf("editors") > 0){
                 s = n.href.replace("editors=1111", "");
                 s = s.replace("&", "");
@@ -6535,14 +6538,6 @@ NastyBrowserSniffing.isIE11OrLess() && -1 === window.location.href.indexOf("/log
     function speedTest(e){
         e.preventDefault(),
         $.post("/chat/console", {'value':'SpeedTest'});
-
-        // let myFooter = document.getElementById("footer-right");
-        // let newBaitTag = document.createElement('a');
-        // let newBaitText = document.createTextNode("SpeedImg");
-        // newBaitTag.setAttribute('href', "https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-        //
-        // newBaitTag.appendChild(newBaitText);
-        // myFooter.appendChild(newBaitTag);
     }
     function linkTest(e){
         e.preventDefault(),
