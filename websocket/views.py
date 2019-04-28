@@ -61,7 +61,7 @@ try:
                         for msg in tv_ws_message[key].pop(0).split(b'\n'):
                             if msg is not b'':
                                 web_ws_dict[key].send(msg)
-
+                        # web_ws_dict[key].send(tv_ws_message[key].pop(0))
 
         except:
             pass
@@ -69,7 +69,6 @@ try:
     scheduler.start()
 except Exception as e:
     print(e)
-    # 有错误就停止定时器
     scheduler.shutdown()
 
 
@@ -77,15 +76,17 @@ def index(request):
     return render(request, 'diagnostic.html', {})
 
 
-
 @csrf_exempt
 def console(request):
     if request.method == 'POST':
         message = request.POST.__getitem__('value')
-        print(message)
-        for client in clients:
-            client.send(message)
 
+        mac = get_macaddr(request.get_full_path().encode(encoding="utf-8"))
+        if mac is not None:
+            try:
+                ws_dict[mac].send(message)
+            except:
+                pass
 
     return render(request, 'console.html', {})
 
@@ -99,9 +100,6 @@ def remote_diagnostic(request):
                 client.send(message)
         else:
             return HttpResponse("error")
-    # else:
-    #     global local_client
-    #     local_client = None
 
     return render(request, 'remote_diagnostic.html', {})
 
@@ -110,6 +108,10 @@ def get_macaddr(line):
     if line.startswith(b'Macaddr:'):
         line = line.decode()
         mac = ":".join(line.split(":")[1:])
+    elif line.find(b"macaddr") != -1:
+        line = line.decode()
+        mac_start_pos = line.index("macaddr=") + 8
+        mac = line[mac_start_pos:mac_start_pos+12]
     else:
         line = line.decode()
         mac = "".join(line.split("/")[3:])
@@ -159,7 +161,7 @@ def ws_connect(request):
                     # update ws_dict[mac]
 
                     ws_dict[mac_format] = request.websocket
-                    clients.append(request.websocket)
+                    # clients.append(request.websocket)
                 else:
                     # if local_client is not None:
                     #     for msg in message.split(b'\n'):

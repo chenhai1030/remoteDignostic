@@ -109,7 +109,8 @@ function send_file_to_clent(){
     data.forEach(function (value, key) {
         let n = window.location
             , cmd = 'busybox wget -c -P /tmp '+n.protocol+"//"+n.hostname+(n.port==""?"":(":"+n.port))+'/media/upload/'+key;
-        $.post("/chat/console", {'value': cmd});
+        // /chat/console
+        $.post(window.location.href, {'value': cmd});
         // console.log(cmd);
     })
     //clean FormData

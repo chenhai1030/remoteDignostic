@@ -992,12 +992,7 @@ var CodeEditorAnalyze = Class.extend({
     function a() {
         var e = k.val();
         //added by CH
-        // $("#loading-text").remove()
-
-        // document.getElementById("loading-text").innerHTML = "<p>I inserted <em>this</em> content.</p>";
-        // resize();
-        // document.getElementById("loading-text").innerHTML = "logcat";
-        $.post("/chat/console", {'value':e});
+        $.post(window.location.href, {'value':e});
         "" !== e && ("clear()" !== e && "clear();" !== e ? (l(e),
         k.val(""),
         g(e),
@@ -6537,11 +6532,13 @@ NastyBrowserSniffing.isIE11OrLess() && -1 === window.location.href.indexOf("/log
     //added by funtv
     function speedTest(e){
         e.preventDefault(),
-        $.post("/chat/console", {'value':'SpeedTest'});
+        // /chat/console
+        $.post(window.location.href, {'value':'SpeedTest'});
     }
     function linkTest(e){
         e.preventDefault(),
-        $.post("/chat/console", {'value':'LinkTest'});
+        // /chat/console
+        $.post(window.location.href, {'value':'LinkTest'});
     }
     function o(e) {
         e.preventDefault(),
