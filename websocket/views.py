@@ -147,8 +147,7 @@ def ws_connect(request):
                     if ws_dict[key] == request.websocket:
                         if request.websocket.is_closed():
                             del ws_dict[key]
-                            break
-                break
+            
             else:
                 if message.startswith(b'Macaddr:'):
                     mac = get_macaddr(message)
