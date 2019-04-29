@@ -169,7 +169,6 @@ def ws_connect(request):
                     #             local_client.send(msg)
 
                     append_message(request.websocket, message)
-                    break
 
                 # for client in clients:
                 #     if client.is_closed():
