@@ -8,8 +8,14 @@ let defaultAddress = scheme + window.location.host + '/chat/echo';
 
 
 function addToLog(log) {
-  logBox.innerHTML += log + "<br/>";
-  logBoxEnd.scrollIntoView();
+    if (log.indexOf("FunEnd") > 0){
+        logBoxEnd.scrollIntoView();
+    }
+    else{
+        logBox.innerHTML += log + "<br/>";
+    }
+
+  // logBoxEnd.scrollIntoView();
 }
 
 function ws_connect(mac) {

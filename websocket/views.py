@@ -42,27 +42,26 @@ try:
     # 实例化调度器
     scheduler = BackgroundScheduler()
     # 调度器使用DjangoJobStore()
-    scheduler.add_jobstore(DjangoJobStore(), "default")
+    # scheduler.add_jobstore(DjangoJobStore(), "default")
     # 设置定时任务，选择方式为interval，时间间隔为1s
     # 另一种方式为每天固定时间执行任务，对应代码为：
     # @register_job(scheduler, 'cron', day_of_week='mon-fri', hour='9', minute='30', second='10',id='task_time')
-    @register_job(scheduler,"interval", seconds=1)
+    @register_job(scheduler,"interval", seconds=2)
     def dispatch_message():
         global web_ws_dict
+
         try:
             if not web_ws_dict:
                 return
             else:
                 for key in web_ws_dict.keys():
                     msg_len = len(tv_ws_message[key])
-                    # print(tv_ws_message[key][msg_len-1])
                     if msg_len > 0:
                         print("dispatch_message mac: " + key)
                         for msg in tv_ws_message[key].pop(0).split(b'\n'):
                             if msg is not b'':
                                 web_ws_dict[key].send(msg)
-                        # web_ws_dict[key].send(tv_ws_message[key].pop(0))
-
+                        web_ws_dict[key].send("FunEnd")
         except:
             pass
     register_events(scheduler)
@@ -138,16 +137,16 @@ def ws_connect(request):
 
     if request.websocket.is_closed():
         print("ws is closed!")
-    lock = threading.RLock()
+    # lock = threading.RLock()
     try:
-        lock.acquire()
+        # lock.acquire()
         for message in request.websocket:
             if not message:
                 for key in ws_dict:
                     if ws_dict[key] == request.websocket:
                         if request.websocket.is_closed():
                             del ws_dict[key]
-            
+
             else:
                 if message.startswith(b'Macaddr:'):
                     mac = get_macaddr(message)
@@ -181,8 +180,9 @@ def ws_connect(request):
                                 # macdb.delete()
 
     finally:
+        pass
     #     clients.remove(request.websocket)
-        lock.release()
+    #     lock.release()
 
 
 @require_websocket
@@ -276,7 +276,6 @@ def client_mac(request):
         mac_dict = json.loads(request.body.decode('utf-8'))
         mac = mac_dict['mac']
 
-        bind_ws_by_mac(mac)
     # useless render
     return render(request, 'upload.html')
 
@@ -290,16 +289,14 @@ def macs(request):
     return response
 
 
-def bind_ws_by_mac(mac):
-
-    return ""
-
-
 def append_message(ws_client, msg):
     for key in web_ws_dict.keys():
         print("append_message mac: "+ key)
-        if ws_dict[key] == ws_client:
-            tv_ws_message[key].append(msg)
+        try:
+            if ws_dict[key] == ws_client:
+                tv_ws_message[key].append(msg)
+        except:
+            pass
     return
 
 
