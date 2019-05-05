@@ -3,6 +3,8 @@ from django.shortcuts import render
 # Create your views here.
 from django.http import HttpResponse, StreamingHttpResponse
 from django.core import serializers
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
 
 from .forms import RemoteForm
 from django.views.decorators.csrf import csrf_exempt
@@ -22,6 +24,8 @@ from django_apscheduler.jobstores import DjangoJobStore, register_events, regist
 
 
 from collections import defaultdict
+from PIL import Image
+
 
 clients = []
 local_client = None
@@ -57,11 +61,11 @@ try:
                 for key in web_ws_dict.keys():
                     msg_len = len(tv_ws_message[key])
                     if msg_len > 0:
-                        print("dispatch_message mac: " + key)
+                        # print("dispatch_message mac: " + key)
                         for msg in tv_ws_message[key].pop(0).split(b'\n'):
                             if msg is not b'':
                                 web_ws_dict[key].send(msg)
-                        web_ws_dict[key].send("FunEnd")
+                        web_ws_dict[key].send("FunLogEnd")
         except:
             pass
     register_events(scheduler)
@@ -211,6 +215,26 @@ def echo(request):
             lock.release()
 
 
+def save_file(file_obj, mac, type):
+    sub_folder = 'upload'
+    if type == "img":
+        file_name = file_obj.img.name
+        file = file_obj.img.file
+        sub_folder = 'img'
+        file_path = os.path.join("media", sub_folder, mac, file_name)
+
+        img = Image.open(file)
+        img.save(file_path)
+    else:
+        file_name = file_obj.upload_file.name
+        file = file_obj.upload_file.file
+
+        file_path = os.path.join(sub_folder, mac, file_name)
+        default_storage.save(file_path, ContentFile(file.read()))
+
+    return file_path
+
+
 @csrf_exempt
 def show_img(request):
     imgs = IMG.objects.all()
@@ -233,15 +257,18 @@ def show_downloadable_files(request):
 @csrf_exempt
 def upload_from_client(request):
     if request.method == 'POST':
+        mac = get_macaddr(request.path.encode(encoding="utf-8"))
         if request.FILES.get('img') is not None:
             new_file = IMG(
                 img=request.FILES.get('img')
             )
+            save_file(new_file, mac, "img")
         else:
             new_file = UploadModel(
                 upload_file=request.FILES.get('upload')
             )
-        new_file.save()
+            save_file(new_file, mac, "file")
+        # new_file.save()
     return render(request, 'upload.html')
 
 
@@ -260,6 +287,7 @@ def upload_to_client(request):
 @csrf_exempt
 def upload(request):
     if request.method == 'POST':
+
         for file in request.FILES:
             data = request.FILES.get(file)
             file_path = os.path.join(settings.MEDIA_ROOT, 'upload', file)
@@ -291,7 +319,7 @@ def macs(request):
 
 def append_message(ws_client, msg):
     for key in web_ws_dict.keys():
-        print("append_message mac: "+ key)
+        # print("append_message mac: " + key)
         try:
             if ws_dict[key] == ws_client:
                 tv_ws_message[key].append(msg)
