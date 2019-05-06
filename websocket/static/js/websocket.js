@@ -9,11 +9,15 @@ let defaultAddress = scheme + window.location.host + '/chat/echo';
 
 function addToLog(log) {
     if (log.indexOf("FunLogEnd") > 0){
-        logBoxEnd.scrollIntoView();
+        ScrollToEnd();
     }
     else{
         logBox.innerHTML += log + "<br/>";
     }
+}
+
+function ScrollToEnd(){
+    logBoxEnd.scrollIntoView();
 }
 
 function ws_connect(mac) {
@@ -44,6 +48,7 @@ function ws_connect(mac) {
       logMessage += ' (' + extraInfo.join(', ') + ')';
     }
     addToLog(logMessage);
+    ScrollToEnd();
     heartCheck.reset().start();
   };
   socket.onmessage = function (event) {
@@ -77,6 +82,7 @@ function ws_connect(mac) {
       logMessage += 'CloseEvent is not available';
     }
     addToLog(logMessage + ')');
+    ScrollToEnd();
   };
 
   if (protocols) {
