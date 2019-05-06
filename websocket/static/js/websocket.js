@@ -2,6 +2,7 @@
 let socket = null;
 let logBox = null;
 let logBoxEnd = null;
+let logCount = 0;
 
 let scheme = window.location.protocol == 'https:' ? 'wss://' : 'ws://';
 let defaultAddress = scheme + window.location.host + '/chat/echo';
@@ -12,7 +13,12 @@ function addToLog(log) {
         ScrollToEnd();
     }
     else{
+        logCount++;
         logBox.innerHTML += log + "<br/>";
+    }
+    if (logCount >=1000){
+        logCount = 0;
+        logBox.innerHTML = ''; 
     }
 }
 
