@@ -15,10 +15,13 @@ function addToLog(log) {
     else{
         logCount++;
         logBox.innerHTML += log + "<br/>";
+        if (log == ""){
+            ScrollToEnd();
+        }
     }
     if (logCount >=1000){
         logCount = 0;
-        logBox.innerHTML = ''; 
+        logBox.innerHTML = '';
     }
 }
 
