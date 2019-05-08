@@ -9,7 +9,7 @@ from django.core.files.base import ContentFile
 from .forms import RemoteForm
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import IMG, UploadModel, MacModel
+from .models import IMG, UploadModel, MacModel, UploadedClients
 from django.conf import settings
 
 
@@ -24,7 +24,6 @@ from django_apscheduler.jobstores import DjangoJobStore, register_events, regist
 
 
 from collections import defaultdict
-from PIL import Image
 
 
 clients = []
@@ -46,11 +45,11 @@ try:
     # 实例化调度器
     scheduler = BackgroundScheduler()
     # 调度器使用DjangoJobStore()
-    # scheduler.add_jobstore(DjangoJobStore(), "default")
+    scheduler.add_jobstore(DjangoJobStore(), "default")
     # 设置定时任务，选择方式为interval，时间间隔为1s
     # 另一种方式为每天固定时间执行任务，对应代码为：
     # @register_job(scheduler, 'cron', day_of_week='mon-fri', hour='9', minute='30', second='10',id='task_time')
-    @register_job(scheduler,"interval", seconds=2)
+    @register_job(scheduler,"interval", seconds=1)
     def dispatch_message():
         global web_ws_dict
 
@@ -88,8 +87,9 @@ def console(request):
         if mac is not None:
             try:
                 ws_dict[mac].send(message)
-            except:
-                pass
+                tv_ws_message[mac].clear()
+            except Exception as e:
+                print(e)
 
     return render(request, 'console.html', {})
 
@@ -136,7 +136,6 @@ def if_mac_exists(mac):
 
 @require_websocket
 def ws_connect(request):
-    global local_client
     global ws_dict
 
     if request.websocket.is_closed():
@@ -146,7 +145,7 @@ def ws_connect(request):
         # lock.acquire()
         for message in request.websocket:
             if not message:
-                for key in ws_dict:
+                for key in list(ws_dict.keys()):
                     if ws_dict[key] == request.websocket:
                         if request.websocket.is_closed():
                             del ws_dict[key]
@@ -157,9 +156,10 @@ def ws_connect(request):
                     # format mac from xx:xx:xx:xx:xx to xxxxxxxxxx
                     mac_format = mac.replace(":", "")
                     if not if_mac_exists(mac_format):
-                        # save the mac
-                        # save mac as xx:xx:xx:xx:xx
-                        MacModel(mac_addr=mac).save()
+                        if not MacModel.objects.filter(mac_addr=mac).exists():
+                            # save the mac
+                            # save mac as xx:xx:xx:xx:xx
+                            MacModel(mac_addr=mac).save()
                     # update ws_dict[mac]
 
                     ws_dict[mac_format] = request.websocket
@@ -221,25 +221,26 @@ def save_file(file_obj, mac, type):
         file_name = file_obj.img.name
         file = file_obj.img.file
         sub_folder = 'img'
-        file_path = os.path.join("media", sub_folder, mac, file_name)
-
-        img = Image.open(file)
-        img.save(file_path)
+        # img = Image.open(file)
+        # img.save(file_path)
     else:
         file_name = file_obj.upload_file.name
         file = file_obj.upload_file.file
 
-        file_path = os.path.join(sub_folder, mac, file_name)
-        default_storage.save(file_path, ContentFile(file.read()))
+    file_path = os.path.join(sub_folder, mac, file_name)
+    default_storage.save(file_path, ContentFile(file.read()))
 
-    return file_path
+    if not UploadedClients.objects.filter(client_macs=mac).exists():
+        UploadedClients(client_macs=mac).save()
 
 
 @csrf_exempt
 def show_img(request):
+    # client_macs = UploadedClients.objects.all()
     imgs = IMG.objects.all()
     content = {
         'imgs': imgs,
+        # 'client_macs': client_macs,
     }
     return render(request, 'showimg.html', content)
 
@@ -311,6 +312,15 @@ def client_mac(request):
 def macs(request):
     mac = MacModel.objects.all()
     mac_json = json.dumps(serializers.serialize("json", mac))
+    response = HttpResponse()
+    response['Content-Type'] = "text/javascript"
+    response.write(mac_json)
+    return response
+
+
+def uploaded_clients(request):
+    uploaded_client = UploadedClients.objects.all()
+    mac_json = json.dumps(serializers.serialize("json", uploaded_client))
     response = HttpResponse()
     response['Content-Type'] = "text/javascript"
     response.write(mac_json)
