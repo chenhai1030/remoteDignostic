@@ -318,13 +318,13 @@ def macs(request):
     return response
 
 
-def uploaded_clients(request):
-    uploaded_client = UploadedClients.objects.all()
-    mac_json = json.dumps(serializers.serialize("json", uploaded_client))
-    response = HttpResponse()
-    response['Content-Type'] = "text/javascript"
-    response.write(mac_json)
-    return response
+# def uploaded_clients(request):
+#     uploaded_client = UploadedClients.objects.all()
+#     mac_json = json.dumps(serializers.serialize("json", uploaded_client))
+#     response = HttpResponse()
+#     response['Content-Type'] = "text/javascript"
+#     response.write(mac_json)
+#     return response
 
 
 def append_message(ws_client, msg):
