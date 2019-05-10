@@ -17,6 +17,7 @@ urlpatterns = [
     re_path('download', views.show_downloadable_files),
     re_path('macs', views.macs),
     re_path('client_mac', views.client_mac),
+    re_path('test', views.test),
 ]
 
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

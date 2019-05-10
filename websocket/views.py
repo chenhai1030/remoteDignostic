@@ -27,7 +27,6 @@ from collections import defaultdict
 
 
 clients = []
-local_client = None
 
 # struct:
 # key : value
@@ -105,6 +104,15 @@ def remote_diagnostic(request):
             return HttpResponse("error")
 
     return render(request, 'remote_diagnostic.html', {})
+
+
+@require_websocket
+def test(request):
+    try:
+        for message in request.websocket:
+            request.websocket.send(message)
+    finally:
+        pass
 
 
 def get_macaddr(line):
@@ -191,7 +199,6 @@ def ws_connect(request):
 
 @require_websocket
 def echo(request):
-    global local_client
     global web_ws_dict
     if request.is_websocket:
         lock = threading.RLock()
@@ -205,7 +212,6 @@ def echo(request):
             for message in request.websocket:
                 if not message:
                     if request.websocket.is_closed():
-                        local_client = None
                         print("local ws closed!!")
 
                     # for client in locals_clients:
@@ -325,6 +331,7 @@ def macs(request):
 #     response['Content-Type'] = "text/javascript"
 #     response.write(mac_json)
 #     return response
+
 
 
 def append_message(ws_client, msg):
