@@ -14,10 +14,12 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from django.conf import settings
 from django.conf.urls.static import static
+
+from websocket import views
 
 
 
@@ -43,6 +45,8 @@ urlpatterns = [
     # re_path(r'^echo$', echo),
     path('chat/', include('websocket.urls')),
     path('admin/', admin.site.urls),
+    re_path('media/img/[0-9A-F]{12}$', views.show_files),
+    re_path('media/upload/[0-9A-F]{12}$', views.show_files),
 ]
 
 urlpatterns \

@@ -110,10 +110,10 @@ function ws_connect(mac) {
       start: function(){
           this.serverTimeoutObj = setInterval(function(){
               if(socket.readyState == 1){
-                  // socket.send("ping");
-                  // heartCheck.reset().start();    //
+                  socket.send("ping");
+                  heartCheck.reset().start();    //
               }else{
-                  // ws_connect();
+                  ws_connect();
               }
           }, this.timeout)
       }

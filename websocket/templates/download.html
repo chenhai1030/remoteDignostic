@@ -19,9 +19,15 @@
 {#        {% endfor %}#}
 {#    {% endif %}#}
 
-        {% for file in files %}
-            <li><a href='{{ file.file_url|default_if_none:'#' }}'>'{{ file.file_url|default_if_none:'#' }}'</a>
-        {% endfor %}
+
+    {% for mac in client_macs %}
+        <li><a href='/media/upload/{{ mac.client_macs }}'>'{{ mac.client_macs }}'</a>
+    {% endfor %}
+
+
+{#        {% for file in files %}#}
+{#            <li><a href='{{ file.file_url|default_if_none:'#' }}'>'{{ file.file_url|default_if_none:'#' }}'</a>#}
+{#        {% endfor %}#}
 </ul>
 <hr>
 </body>

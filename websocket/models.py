@@ -8,6 +8,7 @@ class MacModel(models.Model):
 
 class UploadedClients(models.Model):
     client_macs = models.CharField(max_length=20)
+    files = models.CharField(max_length=255, default="")
 
 
 class IMG(models.Model):

@@ -177,7 +177,7 @@ def ws_connect(request):
                     #     for msg in message.split(b'\n'):
                     #         if msg is not b'':
                     #             local_client.send(msg)
-
+                    # print("append_message: " + str(message))
                     append_message(request.websocket, message)
 
                 # for client in clients:
@@ -236,28 +236,40 @@ def save_file(file_obj, mac, type):
     file_path = os.path.join(sub_folder, mac, file_name)
     default_storage.save(file_path, ContentFile(file.read()))
 
-    if not UploadedClients.objects.filter(client_macs=mac).exists():
-        UploadedClients(client_macs=mac).save()
+    # if not UploadedClients.objects.filter(client_macs=mac).exists():
+    #     UploadedClients(client_macs=mac).save()
+    UploadedClients(files=file_path, client_macs=mac).save()
 
 
 @csrf_exempt
-def show_img(request):
-    # client_macs = UploadedClients.objects.all()
-    imgs = IMG.objects.all()
+def showable(request):
+    client_macs = UploadedClients.objects.filter().values("client_macs").distinct()
     content = {
-        'imgs': imgs,
-        # 'client_macs': client_macs,
+        # 'imgs': imgs,
+        'client_macs': client_macs,
     }
-    return render(request, 'showimg.html', content)
+    return render(request, 'show.html', content)
 
 
 @csrf_exempt
-def show_downloadable_files(request):
-    files = UploadModel.objects.all()
+def downloadable(request):
+    client_macs = UploadedClients.objects.filter().values("client_macs").distinct()
+
     content = {
-        'files': files,
+        'client_macs': client_macs,
     }
     return render(request, 'download.html', content)
+
+
+@csrf_exempt
+def show_files(request):
+    mac = request.get_full_path().split("/")[-1]
+    files = UploadedClients.objects.filter(client_macs=mac)
+    content = {
+        'mac': mac,
+        'files': files,
+    }
+    return render(request, 'show_files.html', content)
 
 
 # file uploaded from client
@@ -331,7 +343,6 @@ def macs(request):
 #     response['Content-Type'] = "text/javascript"
 #     response.write(mac_json)
 #     return response
-
 
 
 def append_message(ws_client, msg):
