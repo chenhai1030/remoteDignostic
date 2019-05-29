@@ -26,7 +26,7 @@ from django_apscheduler.jobstores import DjangoJobStore, register_events, regist
 from collections import defaultdict
 
 
-clients = []
+
 
 # struct:
 # key : value
@@ -48,7 +48,7 @@ try:
     # 设置定时任务，选择方式为interval，时间间隔为1s
     # 另一种方式为每天固定时间执行任务，对应代码为：
     # @register_job(scheduler, 'cron', day_of_week='mon-fri', hour='9', minute='30', second='10',id='task_time')
-    @register_job(scheduler,"interval", seconds=1)
+    @register_job(scheduler,"interval", seconds=0.1)
     def dispatch_message():
         global web_ws_dict
 
@@ -92,18 +92,18 @@ def console(request):
 
     return render(request, 'console.html', {})
 
-
-def remote_diagnostic(request):
-    if request.method == 'POST':
-        form = RemoteForm(request.POST)
-        if form.is_valid():
-            for client in clients:
-                message = form.cleaned_data['command']
-                client.send(message)
-        else:
-            return HttpResponse("error")
-
-    return render(request, 'remote_diagnostic.html', {})
+#
+# def remote_diagnostic(request):
+#     if request.method == 'POST':
+#         form = RemoteForm(request.POST)
+#         if form.is_valid():
+#             for client in clients:
+#                 message = form.cleaned_data['command']
+#                 client.send(message)
+#         else:
+#             return HttpResponse("error")
+#
+#     return render(request, 'remote_diagnostic.html', {})
 
 
 @require_websocket
