@@ -6,7 +6,7 @@ from django.core import serializers
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 
-from .forms import RemoteForm
+
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import IMG, UploadModel, MacModel, UploadedClients
@@ -66,6 +66,18 @@ try:
                         web_ws_dict[key].send("FunLogEnd")
         except:
             pass
+
+
+    @register_job(scheduler, "interval", seconds=600)
+    def manager_clients_info():
+        macs = MacModel.objects.all()
+        for mac in macs:
+            if mac.mac_addr in ws_dict.keys():
+                print(mac.mac_addr)
+            else:
+                MacModel.objects.filter(mac_addr=mac.mac_addr).delete()
+                
+
     register_events(scheduler)
     scheduler.start()
 except Exception as e:
