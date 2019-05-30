@@ -23,10 +23,7 @@ import time
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore, register_events, register_job
 
-
 from collections import defaultdict
-
-
 
 
 # struct:
@@ -39,6 +36,10 @@ web_ws_dict = {}
 # key : value
 # mac : [message list]
 tv_ws_message = defaultdict(list)
+
+# struct:
+# mac : true[log on]/false[log off]
+ws_log_on = {}
 
 
 try:
@@ -101,28 +102,33 @@ def console(request):
 
         mac = get_macaddr(request.get_full_path().encode(encoding="utf-8"))
         if mac is not None:
+            if message == "Log_save_on":
+                ws_log_on[mac] = True
+            else:
+                ws_log_on[mac] = False
             try:
                 ws_dict[mac].send(message)
 
                 ### sav log & command
                 command_path = os.path.join("log", mac, time.strftime("command_%Y%m%d.txt", time.localtime()))
-                log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
                 if not default_storage.exists(command_path):
                     default_storage.save(command_path, "")
                     UploadedClients(files=command_path, client_macs=mac).save()
-
-                if not default_storage.exists(log_path):
-                    default_storage.save(log_path, "")
-                    UploadedClients(files=log_path, client_macs=mac).save()
 
                 fs_cmd = default_storage.open(command_path, mode="ab")
                 fs_cmd.write(message.encode()+b'\n')
                 fs_cmd.close()
 
-                if len(tv_ws_message[mac]) > 0:
-                    fs_log = default_storage.open(log_path, mode="ab")
-                    fs_log.write(list_to_str(tv_ws_message[mac]).encode())
-                    fs_log.close()
+                if ws_log_on[mac] is True:
+                    log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
+                    if not default_storage.exists(log_path):
+                        default_storage.save(log_path, "")
+                        UploadedClients(files=log_path, client_macs=mac).save()
+
+                    if len(tv_ws_message[mac]) > 0:
+                        fs_log = default_storage.open(log_path, mode="ab")
+                        fs_log.write(list_to_str(tv_ws_message[mac]).encode())
+                        fs_log.close()
 
                 tv_ws_message[mac].clear()
             except Exception as e:

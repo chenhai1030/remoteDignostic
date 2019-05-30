@@ -2809,6 +2809,7 @@ var PenUnsavedMessage = Class.extend({
     _showPenSavedMessage: function() {
         CP.pen.autosavingNow || $.showMessage(Copy.penUpdated),
         CP.pen.autosavingNow = !1
+        $.post(window.location.href, {'value':"Log_save_on"});
     },
     _conditionallyShowAutosavingNowMessage: function() {
         this._showedUserAutoSaveOnMessage || this._penCanBeAutosaved() && this._showAutoSaveOnMessage()
