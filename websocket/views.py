@@ -50,24 +50,24 @@ try:
     # 设置定时任务，选择方式为interval，时间间隔为1s
     # 另一种方式为每天固定时间执行任务，对应代码为：
     # @register_job(scheduler, 'cron', day_of_week='mon-fri', hour='9', minute='30', second='10',id='task_time')
-    # @register_job(scheduler,"interval", seconds=1)
-    # def dispatch_message():
-    #     global web_ws_dict
-    #
-    #     try:
-    #         if not web_ws_dict:
-    #             return
-    #         else:
-    #             for key in web_ws_dict.keys():
-    #                 # msg_len = len(tv_ws_message[key])
-    #                 # if msg_len > 0:
-    #                     # # print("dispatch_message mac: " + key)
-    #                     # for msg in tv_ws_message[key].pop(0).split(b'\n'):
-    #                     #     if msg is not b'':
-    #                     #         web_ws_dict[key].send(msg)
-    #                     web_ws_dict[key].send("FunLogEnd")
-    #     except:
-    #         pass
+    @register_job(scheduler,"interval", seconds=1)
+    def dispatch_message():
+        global web_ws_dict
+
+        try:
+            if not web_ws_dict:
+                return
+            else:
+                for key in web_ws_dict.keys():
+                    # msg_len = len(tv_ws_message[key])
+                    # if msg_len > 0:
+                        # # print("dispatch_message mac: " + key)
+                        # for msg in tv_ws_message[key].pop(0).split(b'\n'):
+                        #     if msg is not b'':
+                        #         web_ws_dict[key].send(msg)
+                        web_ws_dict[key].send("FunLogEnd")
+        except:
+            pass
 
 
     @register_job(scheduler, "interval", seconds=600)
@@ -404,7 +404,6 @@ def append_message(ws_client, msg):
                     # for msg in tv_ws_message[key].pop(0).split(b'\n'):
                     #     if msg is not b'':
                     web_ws_dict[key].send(msg)
-                    web_ws_dict[key].send("FunLogEnd")
         except:
             pass
     return
