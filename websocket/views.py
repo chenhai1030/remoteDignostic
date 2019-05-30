@@ -18,6 +18,7 @@ import threading
 
 import os
 import json
+import time
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from django_apscheduler.jobstores import DjangoJobStore, register_events, register_job
@@ -89,6 +90,10 @@ def index(request):
     return render(request, 'diagnostic.html', {})
 
 
+def list_to_str(a_list):
+    return "\n".join(list(map(str, a_list)))
+
+
 @csrf_exempt
 def console(request):
     if request.method == 'POST':
@@ -98,6 +103,27 @@ def console(request):
         if mac is not None:
             try:
                 ws_dict[mac].send(message)
+
+                ### sav log & command
+                command_path = os.path.join("log", mac, time.strftime("command_%Y%m%d.txt", time.localtime()))
+                log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
+                if not default_storage.exists(command_path):
+                    default_storage.save(command_path, "")
+                    UploadedClients(files=command_path, client_macs=mac).save()
+
+                if not default_storage.exists(log_path):
+                    default_storage.save(log_path, "")
+                    UploadedClients(files=log_path, client_macs=mac).save()
+
+                fs_cmd = default_storage.open(command_path, mode="ab")
+                fs_cmd.write(message.encode()+b'\n')
+                fs_cmd.close()
+
+                if len(tv_ws_message[mac]) > 0:
+                    fs_log = default_storage.open(log_path, mode="ab")
+                    fs_log.write(list_to_str(tv_ws_message[mac]).encode())
+                    fs_log.close()
+
                 tv_ws_message[mac].clear()
             except Exception as e:
                 print(e)
@@ -366,8 +392,8 @@ def append_message(ws_client, msg):
                 msg_len = len(tv_ws_message[key])
                 if msg_len > 0:
                     # print("dispatch_message mac: " + key)
-                    for msg in tv_ws_message[key].pop(0).split(b'\n'):
-                        if msg is not b'':
+                    # for msg in tv_ws_message[key].pop(0).split(b'\n'):
+                    #     if msg is not b'':
                             web_ws_dict[key].send(msg)
         except:
             pass
