@@ -201,6 +201,8 @@ def ws_connect(request):
                     if ws_dict[key] == request.websocket:
                         if request.websocket.is_closed():
                             del ws_dict[key]
+                            if key in list(ws_log_on.keys()):
+                                del ws_log_on[key]
 
             else:
                 if message.startswith(b'Macaddr:'):
