@@ -119,7 +119,7 @@ def console(request):
                 fs_cmd.write(message.encode()+b'\n')
                 fs_cmd.close()
 
-                if ws_log_on is True and ws_log_on[mac] is True:
+                if ws_log_on is not True and ws_log_on[mac] is True:
                     log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
                     if not default_storage.exists(log_path):
                         default_storage.save(log_path, ContentFile(""))
