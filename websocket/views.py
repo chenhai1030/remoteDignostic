@@ -112,17 +112,17 @@ def console(request):
                 ### sav log & command
                 command_path = os.path.join("log", mac, time.strftime("command_%Y%m%d.txt", time.localtime()))
                 if not default_storage.exists(command_path):
-                    default_storage.save(command_path, "")
+                    default_storage.save(command_path, ContentFile(""))
                     UploadedClients(files=command_path, client_macs=mac).save()
 
                 fs_cmd = default_storage.open(command_path, mode="ab")
                 fs_cmd.write(message.encode()+b'\n')
                 fs_cmd.close()
 
-                if ws_log_on[mac] is True:
+                if ws_log_on is True and ws_log_on[mac] is True:
                     log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
                     if not default_storage.exists(log_path):
-                        default_storage.save(log_path, "")
+                        default_storage.save(log_path, ContentFile(""))
                         UploadedClients(files=log_path, client_macs=mac).save()
 
                     if len(tv_ws_message[mac]) > 0:
@@ -291,7 +291,6 @@ def save_file(file_obj, mac, type):
 def showable(request):
     client_macs = UploadedClients.objects.filter().values("client_macs").distinct()
     content = {
-        # 'imgs': imgs,
         'client_macs': client_macs,
     }
     return render(request, 'show.html', content)
