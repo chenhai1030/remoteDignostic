@@ -70,7 +70,7 @@ try:
             pass
 
 
-    @register_job(scheduler, "interval", seconds=600)
+    @register_job(scheduler, "interval", seconds=10000)
     def manager_clients_info():
         macs = MacModel.objects.all()
         for mac in macs:
