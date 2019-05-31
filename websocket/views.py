@@ -41,6 +41,7 @@ tv_ws_message = defaultdict(list)
 # mac : true[log on]/false[log off]
 ws_log_on = {}
 
+roll_log = False
 
 try:
     # 实例化调度器
@@ -53,19 +54,22 @@ try:
     @register_job(scheduler,"interval", seconds=1)
     def dispatch_message():
         global web_ws_dict
+        global roll_log
 
         try:
             if not web_ws_dict:
                 return
             else:
-                for key in web_ws_dict.keys():
-                    # msg_len = len(tv_ws_message[key])
-                    # if msg_len > 0:
+                for mac in web_ws_dict.keys():
+                    # msg_len = len(tv_ws_message[mac])
+                    # if msg_len > 2:
                         # # print("dispatch_message mac: " + key)
                         # for msg in tv_ws_message[key].pop(0).split(b'\n'):
                         #     if msg is not b'':
                         #         web_ws_dict[key].send(msg)
-                        web_ws_dict[key].send("FunLogEnd")
+                    if roll_log:
+                        web_ws_dict[mac].send("FunLogEnd")
+                        roll_log = False
         except:
             pass
 
@@ -119,18 +123,19 @@ def console(request):
                 fs_cmd.write(message.encode()+b'\n')
                 fs_cmd.close()
 
-                if ws_log_on is not True and ws_log_on[mac] is True:
-                    log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
-                    if not default_storage.exists(log_path):
-                        default_storage.save(log_path, ContentFile(""))
-                        UploadedClients(files=log_path, client_macs=mac).save()
+                try:
+                    if ws_log_on is not True and ws_log_on[mac] is True:
+                        log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
+                        if not default_storage.exists(log_path):
+                            default_storage.save(log_path, ContentFile(""))
+                            UploadedClients(files=log_path, client_macs=mac).save()
 
-                    if len(tv_ws_message[mac]) > 0:
-                        fs_log = default_storage.open(log_path, mode="ab")
-                        fs_log.write(list_to_str(tv_ws_message[mac]).encode())
-                        fs_log.close()
-
-                tv_ws_message[mac].clear()
+                        if len(tv_ws_message[mac]) > 0:
+                            fs_log = default_storage.open(log_path, mode="ab")
+                            fs_log.write(list_to_str(tv_ws_message[mac]).encode())
+                            fs_log.close()
+                finally:
+                    tv_ws_message[mac].clear()
             except Exception as e:
                 print(e)
 
@@ -391,6 +396,7 @@ def macs(request):
 
 
 def append_message(ws_client, msg):
+    global roll_log
     for key in web_ws_dict.keys():
         # print("append_message mac: " + key)
         try:
@@ -402,6 +408,8 @@ def append_message(ws_client, msg):
                     # for msg in tv_ws_message[key].pop(0).split(b'\n'):
                     #     if msg is not b'':
                     web_ws_dict[key].send(msg)
+                    roll_log = True
+
         except:
             pass
     return
