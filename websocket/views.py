@@ -103,12 +103,11 @@ def console(request):
 
         mac = get_macaddr(request.get_full_path().encode(encoding="utf-8"))
         if mac is not None:
-            if message == "Log_save_on":
-                ws_log_on[mac] = True
-            else:
-                ws_log_on[mac] = False
             try:
-                ws_dict[mac].send(message)
+                if message == "Log_save_on":
+                    ws_log_on[mac] = True
+                else:
+                    ws_dict[mac].send(message)
 
                 ### sav log & command
                 command_path = os.path.join("log", mac, time.strftime("command_%Y%m%d.txt", time.localtime()))
