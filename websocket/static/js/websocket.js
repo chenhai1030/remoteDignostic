@@ -35,9 +35,9 @@ function ws_connect(mac) {
 
   if ('WebSocket' in window) {
     if (protocols) {
-      socket = new WebSocket(url, protocols);
+      socket = new ReconnectingWebSocket(url, protocols);
     } else {
-      socket = new WebSocket(url);
+      socket = new ReconnectingWebSocket(url);
     }
   } else {
    return;

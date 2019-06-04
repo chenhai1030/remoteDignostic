@@ -124,16 +124,17 @@ def console(request):
                 fs_cmd.close()
 
                 try:
-                    if ws_log_on is not True and ws_log_on[mac] is True:
-                        log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
-                        if not default_storage.exists(log_path):
-                            default_storage.save(log_path, ContentFile(""))
-                            UploadedClients(files=log_path, client_macs=mac).save()
+                    if len(ws_log_on):
+                        if ws_log_on[mac] is True:
+                            log_path = os.path.join("log", mac, time.strftime("log_%Y%m%d.txt", time.localtime()))
+                            if not default_storage.exists(log_path):
+                                default_storage.save(log_path, ContentFile(""))
+                                UploadedClients(files=log_path, client_macs=mac).save()
 
-                        if len(tv_ws_message[mac]) > 0:
-                            fs_log = default_storage.open(log_path, mode="ab")
-                            fs_log.write(list_to_str(tv_ws_message[mac]).encode())
-                            fs_log.close()
+                            if len(tv_ws_message[mac]) > 0:
+                                fs_log = default_storage.open(log_path, mode="ab")
+                                fs_log.write(list_to_str(tv_ws_message[mac]).encode())
+                                fs_log.close()
                 finally:
                     tv_ws_message[mac].clear()
             except Exception as e:
@@ -263,6 +264,7 @@ def echo(request):
             for message in request.websocket:
                 if not message:
                     if request.websocket.is_closed():
+                        print(request.get_full_path())
                         print("local ws closed!!")
 
                     # for client in locals_clients:
